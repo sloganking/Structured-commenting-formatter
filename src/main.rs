@@ -1,7 +1,9 @@
+use glob::glob;
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::io::{self, BufRead};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 // The output is wrapped in a Result to allow matching on errors
 // Returns an Iterator to the Reader of the lines of the file.
@@ -23,13 +25,42 @@ fn add_whitespace(line: &str, tab_depth: u32, tab_spaces: u32) -> String {
     value + line
 }
 
-fn main() {
+fn get_rust_files_in_dir(path: &str) -> Vec<PathBuf> {
+    //> get list of all files in ./input/ using glob
+        let mut paths = Vec::new();
+    
+        let file_delimiter = "rs";
+        let search_params = String::from(path) + "**/*" + file_delimiter;
+    
+        for entry in glob(&search_params).expect("Failed to read glob pattern") {
+            match entry {
+                Ok(path) => {
+                    paths.push(path);
+                }
+                Err(e) => println!("{:?}", e),
+            }
+        }
+    
+    //<> filter out directories
+        let paths = paths.into_iter().filter(|e| e.is_file());
+    
+    //<> filter out non unicode files
+        let paths: Vec<PathBuf> = paths
+            .into_iter()
+            .filter(|e| fs::read_to_string(e).is_ok())
+            .collect();
+    //<
+
+    paths
+}
+
+fn format_file(file: PathBuf) {
     let mut formatted_file = String::from("");
 
     let tab_spaces = 4;
     let mut current_tab_depth = 0;
 
-    if let Ok(lines) = read_lines("./input/formatted_lib.rs") {
+    if let Ok(lines) = read_lines(&file) {
         for line in lines {
             let line = line.expect("Line not valid");
             let mut starting_chars = String::from("");
@@ -68,10 +99,18 @@ fn main() {
     println!("{}", formatted_file);
 
     //> write file
-        let path = "./input/results.rs";
-        let mut output = File::create(path).unwrap();
+        // let path = "./input/results.rs";
+        let mut output = File::create(file).unwrap();
         write!(output, "{}", formatted_file).expect("failed to write file");
     //<
 
     assert!(current_tab_depth == 0, "unclosed comment");
+}
+
+fn main() {
+    let paths = get_rust_files_in_dir("./src/");
+
+    for file in paths {
+        format_file(file);
+    }
 }
