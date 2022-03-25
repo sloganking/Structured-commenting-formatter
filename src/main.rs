@@ -59,35 +59,50 @@ fn format_file(file: PathBuf) {
 
     let tab_spaces = 4;
     let mut current_tab_depth = 0;
+    let mut bracket_stack= Vec::new();
 
     if let Ok(lines) = read_lines(&file) {
-        for line in lines {
+        for (i, line) in lines.enumerate() {
             let line = line.expect("Line not valid");
             let mut starting_chars = String::from("");
 
-            let char_vec: Vec<char> = line.chars().collect();
-            for (i, char) in char_vec.iter().enumerate() {
-                if *char as u32 > 32 {
-                    starting_chars = String::from(&line[i..]);
-                    break;
+            //> chop off begining spaces
+                let char_vec: Vec<char> = line.chars().collect();
+                for (i, char) in char_vec.iter().enumerate() {
+                    if *char as u32 > 32 {
+                        starting_chars = String::from(&line[i..]);
+                        break;
+                    }
                 }
-            }
 
-            let formatted_line;
+            //<> remove comment notation if it exists
+                let comment_starter = "//";
 
-            if starting_chars.starts_with("//>") {
-                formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
-                current_tab_depth += 1;
-            } else if starting_chars.starts_with("//<>") {
-                current_tab_depth -= 1;
-                formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
-                current_tab_depth += 1;
-            } else if starting_chars.starts_with("//<") {
-                current_tab_depth -= 1;
-                formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
-            } else {
-                formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
-            }
+                if starting_chars.starts_with(comment_starter){
+                    starting_chars = String::from(&line[comment_starter.len()-1..]);
+                }
+
+            //<> apply whitespace depth
+                let formatted_line;
+
+                if starting_chars.starts_with(">") {
+                    formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
+                    current_tab_depth += 1;
+                    bracket_stack.push(i+1);
+                } else if starting_chars.starts_with("<>") {
+                    current_tab_depth -= 1;
+                    formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
+                    current_tab_depth += 1;
+                    bracket_stack.pop();
+                    bracket_stack.push(i+1);
+                } else if starting_chars.starts_with("<") {
+                    current_tab_depth -= 1;
+                    formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
+                    bracket_stack.pop();
+                } else {
+                    formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
+                }
+            //<
 
             formatted_file.push_str(&(formatted_line + "\n"));
         }
@@ -98,17 +113,20 @@ fn format_file(file: PathBuf) {
 
     println!("{}", formatted_file);
 
-    //> write file
+    //> ensure formatting successful
+        if current_tab_depth != 0{
+            panic!("unclosed comment at line: {}", bracket_stack.pop().unwrap());
+        }   
+
+    //<> write file
         // let path = "./input/results.rs";
         let mut output = File::create(file).unwrap();
         write!(output, "{}", formatted_file).expect("failed to write file");
     //<
-
-    assert!(current_tab_depth == 0, "unclosed comment");
 }
 
 fn main() {
-    let paths = get_rust_files_in_dir("./src/");
+    let paths = get_rust_files_in_dir("./test/");
 
     for file in paths {
         format_file(file);
