@@ -59,43 +59,51 @@ fn format_file(file: PathBuf) {
 
     let tab_spaces = 4;
     let mut current_tab_depth = 0;
-    let mut bracket_stack= Vec::new();
+    let mut bracket_stack = Vec::new();
 
     if let Ok(lines) = read_lines(&file) {
         for (i, line) in lines.enumerate() {
             let line = line.expect("Line not valid");
-            let mut starting_chars = String::from("");
+            let mut line_no_leading_spaces = String::from("");
 
             //> chop off begining spaces
                 let char_vec: Vec<char> = line.chars().collect();
                 for (i, char) in char_vec.iter().enumerate() {
                     if *char as u32 > 32 {
-                        starting_chars = String::from(&line[i..]);
+                        line_no_leading_spaces = String::from(&line[i..]);
                         break;
                     }
                 }
-
+    
             //<> remove comment notation if it exists
                 let comment_starter = "//";
-
-                if starting_chars.starts_with(comment_starter){
-                    starting_chars = String::from(&line[comment_starter.len()-1..]);
+                let mut is_a_comment = false;
+                if line_no_leading_spaces.starts_with(comment_starter) {
+                    is_a_comment = true;
+                    line_no_leading_spaces =
+                        String::from(&line_no_leading_spaces[comment_starter.len()..]);
                 }
-
+    
+                // println!("is_a_comment: {}",is_a_comment);
+                if is_a_comment {
+                    println!();
+                }
+                println!("{}", line_no_leading_spaces);
+    
             //<> apply whitespace depth
                 let formatted_line;
-
-                if starting_chars.starts_with(">") {
+    
+                if is_a_comment & line_no_leading_spaces.starts_with(">") {
                     formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
                     current_tab_depth += 1;
-                    bracket_stack.push(i+1);
-                } else if starting_chars.starts_with("<>") {
+                    bracket_stack.push(i + 1);
+                } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
                     current_tab_depth -= 1;
                     formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
                     current_tab_depth += 1;
                     bracket_stack.pop();
-                    bracket_stack.push(i+1);
-                } else if starting_chars.starts_with("<") {
+                    bracket_stack.push(i + 1);
+                } else if is_a_comment & line_no_leading_spaces.starts_with("<") {
                     current_tab_depth -= 1;
                     formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
                     bracket_stack.pop();
@@ -114,10 +122,10 @@ fn format_file(file: PathBuf) {
     println!("{}", formatted_file);
 
     //> ensure formatting successful
-        if current_tab_depth != 0{
+        if current_tab_depth != 0 {
             panic!("unclosed comment at line: {}", bracket_stack.pop().unwrap());
-        }   
-
+        }
+    
     //<> write file
         // let path = "./input/results.rs";
         let mut output = File::create(file).unwrap();
