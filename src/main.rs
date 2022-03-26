@@ -87,7 +87,7 @@ fn format_file(file: PathBuf) {
             //<> apply whitespace depth
                 let formatted_line;
     
-                if is_a_comment & line_no_leading_spaces.starts_with(">") {
+                if is_a_comment & line_no_leading_spaces.starts_with('>') {
                     formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
                     current_tab_depth += 1;
                     bracket_stack.push(i + 1);
@@ -97,7 +97,7 @@ fn format_file(file: PathBuf) {
                     current_tab_depth += 1;
                     bracket_stack.pop();
                     bracket_stack.push(i + 1);
-                } else if is_a_comment & line_no_leading_spaces.starts_with("<") {
+                } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
                     current_tab_depth -= 1;
                     formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
                     bracket_stack.pop();
@@ -112,8 +112,6 @@ fn format_file(file: PathBuf) {
 
     // remove last \n
     formatted_file.pop();
-
-    println!("{}", formatted_file);
 
     //> ensure formatting successful
         if current_tab_depth != 0 {
