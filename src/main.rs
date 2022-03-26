@@ -134,7 +134,7 @@ fn format_file(file: PathBuf) {
 }
 
 fn main() {
-    let paths = get_rust_files_in_dir("./test/");
+    let paths = get_rust_files_in_dir("./src/");
 
     for file in paths {
         format_file(file);
