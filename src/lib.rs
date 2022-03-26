@@ -1,7 +1,15 @@
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn integration_test() {}
+    // use crate::strfmt;
+
+    // #[test]
+    // fn integration_test() {
+    //     let paths = strfmt::get_rust_files_in_dir("./test/");
+
+    //     for file in paths {
+    //         strfmt::format_file(file);
+    //     }
+    // }
 }
 
 pub mod strfmt {
@@ -10,18 +18,7 @@ pub mod strfmt {
     use std::fs;
     use std::fs::File;
     use std::io::Write;
-    use std::io::{self, BufRead};
-    use std::path::{Path, PathBuf};
-
-    // The output is wrapped in a Result to allow matching on errors
-    // Returns an Iterator to the Reader of the lines of the file.
-    fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-    where
-        P: AsRef<Path>,
-    {
-        let file = File::open(filename)?;
-        Ok(io::BufReader::new(file).lines())
-    }
+    use std::path::PathBuf;
 
     fn add_whitespace(line: &str, tab_depth: u32, tab_spaces: u32) -> String {
         let mut value = String::from("");
@@ -62,60 +59,60 @@ pub mod strfmt {
         paths
     }
 
-    pub fn format_file(file: PathBuf) {
+    pub fn format_str(str: &str) -> String {
         let mut formatted_file = String::from("");
 
         let tab_spaces = 4;
         let mut current_tab_depth = 0;
         let mut bracket_stack = Vec::new();
 
-        if let Ok(lines) = read_lines(&file) {
-            for (i, line) in lines.enumerate() {
-                let line = line.expect("Line not valid");
-                let mut line_no_leading_spaces = String::from("");
+        let lines = str.lines();
 
-                //> chop off begining spaces
-                    let char_vec: Vec<char> = line.chars().collect();
-                    for (i, char) in char_vec.iter().enumerate() {
-                        if *char as u32 > 32 {
-                            line_no_leading_spaces = String::from(&line[i..]);
-                            break;
-                        }
-                    }
-    
-                //<> remove comment notation if it exists
-                    let comment_starter = "//";
-                    let mut is_a_comment = false;
-                    if line_no_leading_spaces.starts_with(comment_starter) {
-                        is_a_comment = true;
-                        line_no_leading_spaces =
-                            String::from(&line_no_leading_spaces[comment_starter.len()..]);
-                    }
-    
-                //<> apply whitespace depth
-                    let formatted_line;
-    
-                    if is_a_comment & line_no_leading_spaces.starts_with('>') {
-                        formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
-                        current_tab_depth += 1;
-                        bracket_stack.push(i + 1);
-                    } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
-                        current_tab_depth -= 1;
-                        formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
-                        current_tab_depth += 1;
-                        bracket_stack.pop();
-                        bracket_stack.push(i + 1);
-                    } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
-                        current_tab_depth -= 1;
-                        formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
-                        bracket_stack.pop();
-                    } else {
-                        formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
-                    }
-                //<
+        for (i, line) in lines.enumerate() {
+            // let line = line.expect("Line not valid");
+            let mut line_no_leading_spaces = String::from("");
 
-                formatted_file.push_str(&(formatted_line + "\n"));
-            }
+            //> chop off begining spaces
+                let char_vec: Vec<char> = line.chars().collect();
+                for (i, char) in char_vec.iter().enumerate() {
+                    if *char as u32 > 32 {
+                        line_no_leading_spaces = String::from(&line[i..]);
+                        break;
+                    }
+                }
+    
+            //<> remove comment notation if it exists
+                let comment_starter = "//";
+                let mut is_a_comment = false;
+                if line_no_leading_spaces.starts_with(comment_starter) {
+                    is_a_comment = true;
+                    line_no_leading_spaces =
+                        String::from(&line_no_leading_spaces[comment_starter.len()..]);
+                }
+    
+            //<> apply whitespace depth
+                let formatted_line;
+    
+                if is_a_comment & line_no_leading_spaces.starts_with('>') {
+                    formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
+                    current_tab_depth += 1;
+                    bracket_stack.push(i + 1);
+                } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
+                    current_tab_depth -= 1;
+                    formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
+                    current_tab_depth += 1;
+                    bracket_stack.pop();
+                    bracket_stack.push(i + 1);
+                } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
+                    current_tab_depth -= 1;
+                    formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
+                    bracket_stack.pop();
+                } else {
+                    formatted_line = add_whitespace(&line, current_tab_depth, tab_spaces);
+                }
+            //<
+
+            formatted_file.push_str(&(formatted_line + "\n"));
         }
 
         // remove last \n
@@ -125,11 +122,20 @@ pub mod strfmt {
             if current_tab_depth != 0 {
                 panic!("unclosed comment at line: {}", bracket_stack.pop().unwrap());
             }
-    
-        //<> write file
+        //<
+
+        formatted_file
+    }
+
+    pub fn format_file(file: PathBuf) {
+        let contents = fs::read_to_string(&file).expect("Something went wrong reading the file");
+
+        let formatted = format_str(&contents);
+
+        //> write file
             // let path = "./input/results.rs";
             let mut output = File::create(file).unwrap();
-            write!(output, "{}", formatted_file).expect("failed to write file");
+            write!(output, "{}", formatted).expect("failed to write file");
         //<
     }
 }
