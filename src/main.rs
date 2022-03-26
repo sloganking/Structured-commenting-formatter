@@ -84,12 +84,6 @@ fn format_file(file: PathBuf) {
                         String::from(&line_no_leading_spaces[comment_starter.len()..]);
                 }
     
-                // println!("is_a_comment: {}",is_a_comment);
-                if is_a_comment {
-                    println!();
-                }
-                println!("{}", line_no_leading_spaces);
-    
             //<> apply whitespace depth
                 let formatted_line;
     
