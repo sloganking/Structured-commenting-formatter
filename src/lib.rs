@@ -203,7 +203,6 @@ pub mod strfmt {
                     break;
                 }
             }
-            println!("leading_spaces: {:?}", leading_spaces);
     
         //<> remove comment notation if it exists
             let comment_starter_with_space = comment_starter.to_owned() + " ";
@@ -274,6 +273,10 @@ pub mod strfmt {
                     }
                 }
                 // println!("leading_spaces: {:?}", leading_spaces);
+
+                if line_no_leading_spaces == "--load destinations"{
+                    println!();
+                }
     
             //<> remove comment notation if it exists
                 let comment_starter_with_space = comment_starter.to_owned() + " ";
@@ -300,7 +303,6 @@ pub mod strfmt {
                                         let line_with_no_bracket = &lines_list
                                             [comment_tracker[comment_tracker.len() - 1].line];
     
-                                        println!("line_with_no_bracket: {}", line_with_no_bracket);
                                         lines_list[comment_tracker[comment_tracker.len() - 1].line] =
                                             make_comment_open_bracket(line_with_no_bracket, filetype)
                                                 .unwrap();
@@ -320,6 +322,30 @@ pub mod strfmt {
                                 } else {
                                     // last was not structured
                                     comment_tracker.pop();
+
+                                    //> end the last structured comment(s)
+                                        while comment_tracker.len() > 0 && !(x > comment_tracker[comment_tracker.len() - 1].depth){
+                                            let close_bracket_line = new_comment_closed_bracket(
+                                                comment_tracker[comment_tracker.len() - 1].depth,
+                                                filetype,
+                                            )
+                                            .unwrap();
+                                            lines_list.push(close_bracket_line);
+                                            cur_line += 1;
+                                            comment_tracker.pop();
+                                        }
+                                    //<> pass a new comment that we don't know if it's structured
+                                        let comment = CommentDetail {
+                                            line: cur_line,
+                                            depth: leading_spaces.unwrap(),
+                                        };
+    
+                                        comment_tracker.push(comment);
+                                        unsure_if_last_comment_was_structured = true;
+    
+                                        lines_list.push(String::from(line));
+                                        cur_line += 1;
+                                    //<
                                 }
                             } else {
                                 if x > comment_tracker[comment_tracker.len() - 1].depth {
@@ -336,15 +362,17 @@ pub mod strfmt {
                                         cur_line += 1;
                                     //<
                                 } else {
-                                    //> end the last structured comment
-                                        let close_bracket_line = new_comment_closed_bracket(
-                                            comment_tracker[comment_tracker.len() - 1].depth,
-                                            filetype,
-                                        )
-                                        .unwrap();
-                                        lines_list.push(close_bracket_line);
-                                        cur_line += 1;
-                                        comment_tracker.pop();
+                                    //> end the last structured comment(s)
+                                        while comment_tracker.len() > 0 && !(x > comment_tracker[comment_tracker.len() - 1].depth){
+                                            let close_bracket_line = new_comment_closed_bracket(
+                                                comment_tracker[comment_tracker.len() - 1].depth,
+                                                filetype,
+                                            )
+                                            .unwrap();
+                                            lines_list.push(close_bracket_line);
+                                            cur_line += 1;
+                                            comment_tracker.pop();
+                                        }
     
                                     //<> pass a new comment that we don't know if it's structured
                                         let comment = CommentDetail {
@@ -384,7 +412,6 @@ pub mod strfmt {
                                         let line_with_no_bracket = &lines_list
                                             [comment_tracker[comment_tracker.len() - 1].line];
     
-                                        println!("line_with_no_bracket: {}", line_with_no_bracket);
                                         lines_list[comment_tracker[comment_tracker.len() - 1].line] =
                                             make_comment_open_bracket(line_with_no_bracket, filetype)
                                                 .unwrap();
@@ -402,15 +429,17 @@ pub mod strfmt {
                                     lines_list.push(String::from(line));
                                     cur_line += 1;
                                 } else {
-                                    //> end the last structured comment
-                                        let close_bracket_line = new_comment_closed_bracket(
-                                            comment_tracker[comment_tracker.len() - 1].depth,
-                                            filetype,
-                                        )
-                                        .unwrap();
-                                        lines_list.push(close_bracket_line);
-                                        cur_line += 1;
-                                        comment_tracker.pop();
+                                    //> end the last structured comment(s)
+                                        while comment_tracker.len() > 0 && !(x > comment_tracker[comment_tracker.len() - 1].depth){
+                                            let close_bracket_line = new_comment_closed_bracket(
+                                                comment_tracker[comment_tracker.len() - 1].depth,
+                                                filetype,
+                                            )
+                                            .unwrap();
+                                            lines_list.push(close_bracket_line);
+                                            cur_line += 1;
+                                            comment_tracker.pop();
+                                        }
                                     //<> forward the current line
                                         lines_list.push(String::from(line));
                                         cur_line += 1;
