@@ -59,15 +59,20 @@ pub mod strfmt {
         paths
     }
 
+    fn gen_compatable_file_table() -> HashMap<&'static str, &'static str> {
+        let mut filetype_to_comment = HashMap::new();
+        filetype_to_comment.insert("java", "//");
+        filetype_to_comment.insert("lua", "--");
+        filetype_to_comment.insert("rs", "//");
+        filetype_to_comment
+    }
+
     pub fn format_str(str: &str, filetype: &str) -> Option<String> {
         //> define compatable filetypes
-            let mut filetype_to_comment = HashMap::new();
-            filetype_to_comment.insert("java", "//");
-            filetype_to_comment.insert("lua", "--");
-            filetype_to_comment.insert("rs", "//");
+            let filetype_to_comment = gen_compatable_file_table();
     
         //<> determine if file compatible
-        let comment_starter = match filetype_to_comment.get(filetype) {
+            let comment_starter = match filetype_to_comment.get(filetype) {
                 Some(x) => *x,
                 None => return None,
             };
@@ -82,7 +87,6 @@ pub mod strfmt {
         let lines = str.lines();
 
         for (i, line) in lines.enumerate() {
-
             //> chop off begining spaces
                 let mut line_no_leading_spaces = "";
                 let char_vec: Vec<char> = line.chars().collect();
@@ -98,12 +102,10 @@ pub mod strfmt {
                 let mut is_a_comment = false;
                 if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
                     is_a_comment = true;
-                    line_no_leading_spaces =
-                        &line_no_leading_spaces[comment_starter.len() + 1..];
+                    line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len() + 1..];
                 } else if line_no_leading_spaces.starts_with(comment_starter) {
                     is_a_comment = true;
-                    line_no_leading_spaces =
-                        &line_no_leading_spaces[comment_starter.len()..];
+                    line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len()..];
                 }
     
             //<> apply whitespace depth
@@ -114,12 +116,18 @@ pub mod strfmt {
                     current_tab_depth += 1;
                     bracket_stack.push(i + 1);
                 } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
+                    if current_tab_depth == 0 {
+                        panic!("<> closed nothing at line: {}", i + 1)
+                    }
                     current_tab_depth -= 1;
                     formatted_line = add_whitespace(line, current_tab_depth, tab_spaces);
                     current_tab_depth += 1;
                     bracket_stack.pop();
                     bracket_stack.push(i + 1);
                 } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
+                    if current_tab_depth == 0 {
+                        panic!("< closed nothing at line: {}", i + 1)
+                    }
                     current_tab_depth -= 1;
                     formatted_line = add_whitespace(line, current_tab_depth, tab_spaces);
                     bracket_stack.pop();
