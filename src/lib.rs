@@ -1,16 +1,21 @@
-#[cfg(test)]
-mod tests {
-    use crate::strfmt;
+// #[cfg(test)]
+// mod tests {
+//     use crate::strfmt;
 
-    #[test]
-    fn integration_test() {
-        let paths = strfmt::get_files_in_dir("./test/", "");
+//     // #[test]
+//     // fn integration_test() {
+//     //     let paths = strfmt::get_files_in_dir("./test/", "");
 
-        for file in paths {
-            strfmt::format_file(file);
-        }
-    }
-}
+//     //     for file in paths {
+//     //         strfmt::format_file(file);
+//     //     }
+//     // }
+
+//     // #[test]
+//     // fn leading_spaces() {
+
+//     // }
+// }
 
 pub mod strfmt {
 
@@ -68,10 +73,8 @@ pub mod strfmt {
     }
 
     pub fn format_str(str: &str, filetype: &str) -> Option<String> {
-        //> define compatable filetypes
+        //> determine if file compatible
             let filetype_to_comment = gen_compatable_file_table();
-    
-        //<> determine if file compatible
             let comment_starter = match filetype_to_comment.get(filetype) {
                 Some(x) => *x,
                 None => return None,
@@ -161,5 +164,278 @@ pub mod strfmt {
             let mut output = File::create(file).unwrap();
             write!(output, "{}", formatted).expect("failed to write file");
         //<
+    }
+
+    pub fn convert_to_brackets_file(file: PathBuf) {
+        let extenstion = file.extension().unwrap().to_str().unwrap();
+        let contents = fs::read_to_string(&file).expect("Something went wrong reading the file");
+
+        let converted = convert_to_brackets(&contents, extenstion).unwrap();
+
+        //> write file
+            let mut output = File::create(file).unwrap();
+            write!(output, "{}", converted).expect("failed to write file");
+        //<
+    }
+
+    struct CommentDetail {
+        line: usize,
+        depth: usize,
+    }
+
+    fn make_comment_open_bracket(str: &str, filetype: &str) -> Option<String> {
+        //> determine if file compatible
+            let filetype_to_comment = gen_compatable_file_table();
+            let comment_starter = match filetype_to_comment.get(filetype) {
+                Some(x) => *x,
+                None => return None,
+            };
+        //<
+
+        //> chop off begining spaces
+            let mut line_no_leading_spaces = "";
+            let mut leading_spaces: Option<usize> = None;
+            let char_vec: Vec<char> = str.chars().collect();
+            for (i, char) in char_vec.iter().enumerate() {
+                if *char as u32 > 32 {
+                    line_no_leading_spaces = &str[i..];
+                    leading_spaces = Some(i);
+                    break;
+                }
+            }
+            println!("leading_spaces: {:?}", leading_spaces);
+    
+        //<> remove comment notation if it exists
+            let comment_starter_with_space = comment_starter.to_owned() + " ";
+            let mut is_a_comment = false;
+            if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
+                is_a_comment = true;
+                line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len() + 1..];
+            } else if line_no_leading_spaces.starts_with(comment_starter) {
+                is_a_comment = true;
+                line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len()..];
+            }
+        //<
+
+        if !is_a_comment {
+            println!("!is_a_comment=====================");
+            return None;
+        }
+
+        let first_half = &str[..leading_spaces.unwrap() + comment_starter.len()];
+        let second_half = &str[leading_spaces.unwrap() + comment_starter.len()..];
+
+        Some(String::from(first_half) + ">" + second_half)
+    }
+
+    fn new_comment_closed_bracket(depth: usize, filetype: &str) -> Option<String> {
+        //> determine if file compatible
+            let filetype_to_comment = gen_compatable_file_table();
+            let comment_starter = match filetype_to_comment.get(filetype) {
+                Some(x) => *x,
+                None => return None,
+            };
+        //<
+
+        let mut result = String::new();
+        for _i in 0..depth {
+            result.push(' ');
+        }
+
+        result.push_str(&(String::from(comment_starter) + "<"));
+        Some(result)
+    }
+
+    pub fn convert_to_brackets(str: &str, filetype: &str) -> Option<String> {
+        //> determine if file compatible
+            let filetype_to_comment = gen_compatable_file_table();
+            let comment_starter = match filetype_to_comment.get(filetype) {
+                Some(x) => *x,
+                None => return None,
+            };
+        //<
+
+        let mut comment_tracker: Vec<CommentDetail> = Vec::new();
+
+        let mut lines_list: Vec<String> = Vec::new();
+        let mut unsure_if_last_comment_was_structured = true;
+
+        let mut cur_line: usize = 0;
+        for line in str.lines() {
+            //> chop off begining spaces
+                let mut line_no_leading_spaces = "";
+                let mut leading_spaces: Option<usize> = None;
+                let char_vec: Vec<char> = line.chars().collect();
+                for (i, char) in char_vec.iter().enumerate() {
+                    if *char as u32 > 32 {
+                        line_no_leading_spaces = &line[i..];
+                        leading_spaces = Some(i);
+                        break;
+                    }
+                }
+                // println!("leading_spaces: {:?}", leading_spaces);
+    
+            //<> remove comment notation if it exists
+                let comment_starter_with_space = comment_starter.to_owned() + " ";
+                let mut is_a_comment = false;
+                if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
+                    is_a_comment = true;
+                    line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len() + 1..];
+                } else if line_no_leading_spaces.starts_with(comment_starter) {
+                    is_a_comment = true;
+                    line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len()..];
+                }
+            //<
+
+            match leading_spaces {
+                Some(x) => {
+                    if is_a_comment {
+                        // [TODO] still need to resolve unsure_if_last_comment_was_structured. Because multiple structured comments could come right after one another.
+                        if comment_tracker.len() > 0 {
+                            if unsure_if_last_comment_was_structured {
+                                if x > comment_tracker[comment_tracker.len() - 1].depth {
+                                    // last was structured
+                                    //> add bracket to last comment
+    
+                                        let line_with_no_bracket = &lines_list
+                                            [comment_tracker[comment_tracker.len() - 1].line];
+    
+                                        println!("line_with_no_bracket: {}", line_with_no_bracket);
+                                        lines_list[comment_tracker[comment_tracker.len() - 1].line] =
+                                            make_comment_open_bracket(line_with_no_bracket, filetype)
+                                                .unwrap();
+    
+                                    //<> pass a new comment that we don't know if it's structured
+                                        let comment = CommentDetail {
+                                            line: cur_line,
+                                            depth: leading_spaces.unwrap(),
+                                        };
+    
+                                        comment_tracker.push(comment);
+                                        unsure_if_last_comment_was_structured = true;
+    
+                                        lines_list.push(String::from(line));
+                                        cur_line += 1;
+                                    //<
+                                } else {
+                                    // last was not structured
+                                    comment_tracker.pop();
+                                }
+                            } else {
+                                if x > comment_tracker[comment_tracker.len() - 1].depth {
+                                    //> pass a new comment that we don't know if it's structured
+                                        let comment = CommentDetail {
+                                            line: cur_line,
+                                            depth: leading_spaces.unwrap(),
+                                        };
+    
+                                        comment_tracker.push(comment);
+                                        unsure_if_last_comment_was_structured = true;
+    
+                                        lines_list.push(String::from(line));
+                                        cur_line += 1;
+                                    //<
+                                } else {
+                                    //> end the last structured comment
+                                        let close_bracket_line = new_comment_closed_bracket(
+                                            comment_tracker[comment_tracker.len() - 1].depth,
+                                            filetype,
+                                        )
+                                        .unwrap();
+                                        lines_list.push(close_bracket_line);
+                                        cur_line += 1;
+                                        comment_tracker.pop();
+    
+                                    //<> pass a new comment that we don't know if it's structured
+                                        let comment = CommentDetail {
+                                            line: cur_line,
+                                            depth: leading_spaces.unwrap(),
+                                        };
+    
+                                        comment_tracker.push(comment);
+                                        unsure_if_last_comment_was_structured = true;
+    
+                                        lines_list.push(String::from(line));
+                                        cur_line += 1;
+                                    //<
+                                }
+                            }
+                        } else {
+                            //> pass a comment that we don't know if it's structured
+                                let comment = CommentDetail {
+                                    line: cur_line,
+                                    depth: leading_spaces.unwrap(),
+                                };
+    
+                                comment_tracker.push(comment);
+                                unsure_if_last_comment_was_structured = true;
+    
+                                lines_list.push(String::from(line));
+                                cur_line += 1;
+                            //<
+                        }
+                    } else {
+                        if comment_tracker.len() > 0 {
+                            if unsure_if_last_comment_was_structured {
+                                if x > comment_tracker[comment_tracker.len() - 1].depth {
+                                    // last was structured
+                                    //> add bracket to last comment
+    
+                                        let line_with_no_bracket = &lines_list
+                                            [comment_tracker[comment_tracker.len() - 1].line];
+    
+                                        println!("line_with_no_bracket: {}", line_with_no_bracket);
+                                        lines_list[comment_tracker[comment_tracker.len() - 1].line] =
+                                            make_comment_open_bracket(line_with_no_bracket, filetype)
+                                                .unwrap();
+                                    //<
+                                } else {
+                                    // last was not structured
+                                    comment_tracker.pop();
+                                }
+                                unsure_if_last_comment_was_structured = false;
+
+                                lines_list.push(String::from(line));
+                                cur_line += 1;
+                            } else {
+                                if x > comment_tracker[comment_tracker.len() - 1].depth {
+                                    lines_list.push(String::from(line));
+                                    cur_line += 1;
+                                } else {
+                                    //> end the last structured comment
+                                        let close_bracket_line = new_comment_closed_bracket(
+                                            comment_tracker[comment_tracker.len() - 1].depth,
+                                            filetype,
+                                        )
+                                        .unwrap();
+                                        lines_list.push(close_bracket_line);
+                                        cur_line += 1;
+                                        comment_tracker.pop();
+                                    //<> forward the current line
+                                        lines_list.push(String::from(line));
+                                        cur_line += 1;
+                                    //<
+                                }
+                            }
+                        } else {
+                            lines_list.push(String::from(line));
+                            cur_line += 1;
+                        }
+                    }
+                }
+                None => {
+                    lines_list.push(String::from(line));
+                    cur_line += 1;
+                }
+            }
+        }
+
+        let mut final_string = String::new();
+        for line in lines_list {
+            final_string.push_str(&line);
+            final_string.push('\n');
+        }
+
+        Some(final_string)
     }
 }
