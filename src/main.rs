@@ -10,11 +10,11 @@ fn main() {
     //<
 
     // //> format ./test/
-    //     let paths = strfmt::get_files_in_dir("./test/", "lua");
-    
-    //     for file in paths {
-    //         strfmt::format_file(file);
-    //     }
+        // let paths = strfmt::get_files_in_dir("./test/", "lua");
+
+        // for file in paths {
+        //     strfmt::format_file(file);
+        // }
     // //<
 
     //> convert to brackets
@@ -23,5 +23,4 @@ fn main() {
         //     strfmt::convert_to_brackets_file(file)
         // }
     //<
-
 }

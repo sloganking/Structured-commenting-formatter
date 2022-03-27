@@ -37,7 +37,7 @@ pub mod strfmt {
     }
 
     pub fn get_files_in_dir(path: &str, filetype: &str) -> Vec<PathBuf> {
-        //> get list of all files in ./input/ using glob
+        //> get list of all files and dirs in ./input/ using glob
             let mut paths = Vec::new();
     
             let search_params = String::from(path) + "**/*" + filetype;
@@ -190,9 +190,8 @@ pub mod strfmt {
                 Some(x) => *x,
                 None => return None,
             };
-        //<
-
-        //> chop off begining spaces
+    
+        //<> chop off begining spaces
             let mut line_no_leading_spaces = "";
             let mut leading_spaces: Option<usize> = None;
             let char_vec: Vec<char> = str.chars().collect();
@@ -207,17 +206,14 @@ pub mod strfmt {
         //<> remove comment notation if it exists
             let comment_starter_with_space = comment_starter.to_owned() + " ";
             let mut is_a_comment = false;
-            if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
+            if line_no_leading_spaces.starts_with(&comment_starter_with_space)
+                || line_no_leading_spaces.starts_with(comment_starter)
+            {
                 is_a_comment = true;
-                line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len() + 1..];
-            } else if line_no_leading_spaces.starts_with(comment_starter) {
-                is_a_comment = true;
-                line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len()..];
             }
         //<
 
         if !is_a_comment {
-            println!("!is_a_comment=====================");
             return None;
         }
 
@@ -272,21 +268,14 @@ pub mod strfmt {
                         break;
                     }
                 }
-                // println!("leading_spaces: {:?}", leading_spaces);
-
-                if line_no_leading_spaces == "--load destinations"{
-                    println!();
-                }
     
             //<> remove comment notation if it exists
                 let comment_starter_with_space = comment_starter.to_owned() + " ";
                 let mut is_a_comment = false;
-                if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
+                if line_no_leading_spaces.starts_with(&comment_starter_with_space)
+                    || line_no_leading_spaces.starts_with(comment_starter)
+                {
                     is_a_comment = true;
-                    line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len() + 1..];
-                } else if line_no_leading_spaces.starts_with(comment_starter) {
-                    is_a_comment = true;
-                    line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len()..];
                 }
             //<
 
@@ -294,7 +283,7 @@ pub mod strfmt {
                 Some(x) => {
                     if is_a_comment {
                         // [TODO] still need to resolve unsure_if_last_comment_was_structured. Because multiple structured comments could come right after one another.
-                        if comment_tracker.len() > 0 {
+                        if !comment_tracker.is_empty() {
                             if unsure_if_last_comment_was_structured {
                                 if x > comment_tracker[comment_tracker.len() - 1].depth {
                                     // last was structured
@@ -324,7 +313,9 @@ pub mod strfmt {
                                     comment_tracker.pop();
 
                                     //> end the last structured comment(s)
-                                        while comment_tracker.len() > 0 && !(x > comment_tracker[comment_tracker.len() - 1].depth){
+                                        while !comment_tracker.is_empty()
+                                            && x <= comment_tracker[comment_tracker.len() - 1].depth
+                                        {
                                             let close_bracket_line = new_comment_closed_bracket(
                                                 comment_tracker[comment_tracker.len() - 1].depth,
                                                 filetype,
@@ -347,46 +338,46 @@ pub mod strfmt {
                                         cur_line += 1;
                                     //<
                                 }
+                            } else if x > comment_tracker[comment_tracker.len() - 1].depth {
+                                //> pass a new comment that we don't know if it's structured
+                                    let comment = CommentDetail {
+                                        line: cur_line,
+                                        depth: leading_spaces.unwrap(),
+                                    };
+    
+                                    comment_tracker.push(comment);
+                                    unsure_if_last_comment_was_structured = true;
+    
+                                    lines_list.push(String::from(line));
+                                    cur_line += 1;
+                                //<
                             } else {
-                                if x > comment_tracker[comment_tracker.len() - 1].depth {
-                                    //> pass a new comment that we don't know if it's structured
-                                        let comment = CommentDetail {
-                                            line: cur_line,
-                                            depth: leading_spaces.unwrap(),
-                                        };
-    
-                                        comment_tracker.push(comment);
-                                        unsure_if_last_comment_was_structured = true;
-    
-                                        lines_list.push(String::from(line));
+                                //> end the last structured comment(s)
+                                    while !comment_tracker.is_empty()
+                                        && x <= comment_tracker[comment_tracker.len() - 1].depth
+                                    {
+                                        let close_bracket_line = new_comment_closed_bracket(
+                                            comment_tracker[comment_tracker.len() - 1].depth,
+                                            filetype,
+                                        )
+                                        .unwrap();
+                                        lines_list.push(close_bracket_line);
                                         cur_line += 1;
-                                    //<
-                                } else {
-                                    //> end the last structured comment(s)
-                                        while comment_tracker.len() > 0 && !(x > comment_tracker[comment_tracker.len() - 1].depth){
-                                            let close_bracket_line = new_comment_closed_bracket(
-                                                comment_tracker[comment_tracker.len() - 1].depth,
-                                                filetype,
-                                            )
-                                            .unwrap();
-                                            lines_list.push(close_bracket_line);
-                                            cur_line += 1;
-                                            comment_tracker.pop();
-                                        }
+                                        comment_tracker.pop();
+                                    }
     
-                                    //<> pass a new comment that we don't know if it's structured
-                                        let comment = CommentDetail {
-                                            line: cur_line,
-                                            depth: leading_spaces.unwrap(),
-                                        };
+                                //<> pass a new comment that we don't know if it's structured
+                                    let comment = CommentDetail {
+                                        line: cur_line,
+                                        depth: leading_spaces.unwrap(),
+                                    };
     
-                                        comment_tracker.push(comment);
-                                        unsure_if_last_comment_was_structured = true;
+                                    comment_tracker.push(comment);
+                                    unsure_if_last_comment_was_structured = true;
     
-                                        lines_list.push(String::from(line));
-                                        cur_line += 1;
-                                    //<
-                                }
+                                    lines_list.push(String::from(line));
+                                    cur_line += 1;
+                                //<
                             }
                         } else {
                             //> pass a comment that we don't know if it's structured
@@ -402,54 +393,52 @@ pub mod strfmt {
                                 cur_line += 1;
                             //<
                         }
-                    } else {
-                        if comment_tracker.len() > 0 {
-                            if unsure_if_last_comment_was_structured {
-                                if x > comment_tracker[comment_tracker.len() - 1].depth {
-                                    // last was structured
-                                    //> add bracket to last comment
+                    } else if !comment_tracker.is_empty() {
+                        if unsure_if_last_comment_was_structured {
+                            if x > comment_tracker[comment_tracker.len() - 1].depth {
+                                // last was structured
+                                //> add bracket to last comment
     
-                                        let line_with_no_bracket = &lines_list
-                                            [comment_tracker[comment_tracker.len() - 1].line];
+                                    let line_with_no_bracket =
+                                        &lines_list[comment_tracker[comment_tracker.len() - 1].line];
     
-                                        lines_list[comment_tracker[comment_tracker.len() - 1].line] =
-                                            make_comment_open_bracket(line_with_no_bracket, filetype)
-                                                .unwrap();
-                                    //<
-                                } else {
-                                    // last was not structured
-                                    comment_tracker.pop();
-                                }
-                                unsure_if_last_comment_was_structured = false;
-
-                                lines_list.push(String::from(line));
-                                cur_line += 1;
-                            } else {
-                                if x > comment_tracker[comment_tracker.len() - 1].depth {
-                                    lines_list.push(String::from(line));
-                                    cur_line += 1;
-                                } else {
-                                    //> end the last structured comment(s)
-                                        while comment_tracker.len() > 0 && !(x > comment_tracker[comment_tracker.len() - 1].depth){
-                                            let close_bracket_line = new_comment_closed_bracket(
-                                                comment_tracker[comment_tracker.len() - 1].depth,
-                                                filetype,
-                                            )
+                                    lines_list[comment_tracker[comment_tracker.len() - 1].line] =
+                                        make_comment_open_bracket(line_with_no_bracket, filetype)
                                             .unwrap();
-                                            lines_list.push(close_bracket_line);
-                                            cur_line += 1;
-                                            comment_tracker.pop();
-                                        }
-                                    //<> forward the current line
-                                        lines_list.push(String::from(line));
-                                        cur_line += 1;
-                                    //<
-                                }
+                                //<
+                            } else {
+                                // last was not structured
+                                comment_tracker.pop();
                             }
-                        } else {
+                            unsure_if_last_comment_was_structured = false;
+
                             lines_list.push(String::from(line));
                             cur_line += 1;
+                        } else if x > comment_tracker[comment_tracker.len() - 1].depth {
+                            lines_list.push(String::from(line));
+                            cur_line += 1;
+                        } else {
+                            //> end the last structured comment(s)
+                                while !comment_tracker.is_empty()
+                                    && x <= comment_tracker[comment_tracker.len() - 1].depth
+                                {
+                                    let close_bracket_line = new_comment_closed_bracket(
+                                        comment_tracker[comment_tracker.len() - 1].depth,
+                                        filetype,
+                                    )
+                                    .unwrap();
+                                    lines_list.push(close_bracket_line);
+                                    cur_line += 1;
+                                    comment_tracker.pop();
+                                }
+                            //<> forward the current line
+                                lines_list.push(String::from(line));
+                                cur_line += 1;
+                            //<
                         }
+                    } else {
+                        lines_list.push(String::from(line));
+                        cur_line += 1;
                     }
                 }
                 None => {
@@ -464,6 +453,8 @@ pub mod strfmt {
             final_string.push_str(&line);
             final_string.push('\n');
         }
+        // remove last \n
+        final_string.pop();
 
         Some(final_string)
     }
