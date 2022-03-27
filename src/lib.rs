@@ -15,6 +15,7 @@ mod tests {
 pub mod strfmt {
 
     use glob::glob;
+    use std::collections::HashMap;
     use std::fs;
     use std::fs::File;
     use std::io::Write;
@@ -30,12 +31,11 @@ pub mod strfmt {
         value + line
     }
 
-    pub fn get_rust_files_in_dir(path: &str) -> Vec<PathBuf> {
+    pub fn get_files_in_dir(path: &str, filetype: &str) -> Vec<PathBuf> {
         //> get list of all files in ./input/ using glob
             let mut paths = Vec::new();
     
-            let file_delimiter = "rs";
-            let search_params = String::from(path) + "**/*" + file_delimiter;
+            let search_params = String::from(path) + "**/*" + filetype;
     
             for entry in glob(&search_params).expect("Failed to read glob pattern") {
                 match entry {
@@ -59,7 +59,21 @@ pub mod strfmt {
         paths
     }
 
-    pub fn format_str(str: &str) -> String {
+    pub fn format_str(str: &str, filetype: &str) -> Option<String> {
+        //> define compatable filetypes
+            let mut filetype_to_comment = HashMap::new();
+            filetype_to_comment.insert("java", "//");
+            filetype_to_comment.insert("lua", "--");
+            filetype_to_comment.insert("rs", "//");
+    
+        //<> determine if file compatible
+            let comment_starter;
+            match filetype_to_comment.get(filetype) {
+                Some(x) => comment_starter = *x,
+                None => return None,
+            }
+        //<
+
         let mut formatted_file = String::from("");
 
         let tab_spaces = 4;
@@ -82,9 +96,13 @@ pub mod strfmt {
                 }
     
             //<> remove comment notation if it exists
-                let comment_starter = "//";
+                let comment_starter_with_space = comment_starter.to_owned() + " ";
                 let mut is_a_comment = false;
-                if line_no_leading_spaces.starts_with(comment_starter) {
+                if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
+                    is_a_comment = true;
+                    line_no_leading_spaces =
+                        String::from(&line_no_leading_spaces[comment_starter.len() + 1..]);
+                } else if line_no_leading_spaces.starts_with(comment_starter) {
                     is_a_comment = true;
                     line_no_leading_spaces =
                         String::from(&line_no_leading_spaces[comment_starter.len()..]);
@@ -124,16 +142,16 @@ pub mod strfmt {
             }
         //<
 
-        formatted_file
+        Some(formatted_file)
     }
 
     pub fn format_file(file: PathBuf) {
+        let extenstion = file.extension().unwrap().to_str().unwrap();
         let contents = fs::read_to_string(&file).expect("Something went wrong reading the file");
 
-        let formatted = format_str(&contents);
+        let formatted = format_str(&contents, extenstion).unwrap();
 
         //> write file
-            // let path = "./input/results.rs";
             let mut output = File::create(file).unwrap();
             write!(output, "{}", formatted).expect("failed to write file");
         //<
