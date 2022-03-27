@@ -1,15 +1,15 @@
 #[cfg(test)]
 mod tests {
-    // use crate::strfmt;
+    use crate::strfmt;
 
-    // #[test]
-    // fn integration_test() {
-    //     let paths = strfmt::get_rust_files_in_dir("./test/");
+    #[test]
+    fn integration_test() {
+        let paths = strfmt::get_files_in_dir("./test/", "");
 
-    //     for file in paths {
-    //         strfmt::format_file(file);
-    //     }
-    // }
+        for file in paths {
+            strfmt::format_file(file);
+        }
+    }
 }
 
 pub mod strfmt {
@@ -67,11 +67,10 @@ pub mod strfmt {
             filetype_to_comment.insert("rs", "//");
     
         //<> determine if file compatible
-            let comment_starter;
-            match filetype_to_comment.get(filetype) {
-                Some(x) => comment_starter = *x,
+        let comment_starter = match filetype_to_comment.get(filetype) {
+                Some(x) => *x,
                 None => return None,
-            }
+            };
         //<
 
         let mut formatted_file = String::from("");
@@ -83,14 +82,13 @@ pub mod strfmt {
         let lines = str.lines();
 
         for (i, line) in lines.enumerate() {
-            // let line = line.expect("Line not valid");
-            let mut line_no_leading_spaces = String::from("");
 
             //> chop off begining spaces
+                let mut line_no_leading_spaces = "";
                 let char_vec: Vec<char> = line.chars().collect();
                 for (i, char) in char_vec.iter().enumerate() {
                     if *char as u32 > 32 {
-                        line_no_leading_spaces = String::from(&line[i..]);
+                        line_no_leading_spaces = &line[i..];
                         break;
                     }
                 }
@@ -101,11 +99,11 @@ pub mod strfmt {
                 if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
                     is_a_comment = true;
                     line_no_leading_spaces =
-                        String::from(&line_no_leading_spaces[comment_starter.len() + 1..]);
+                        &line_no_leading_spaces[comment_starter.len() + 1..];
                 } else if line_no_leading_spaces.starts_with(comment_starter) {
                     is_a_comment = true;
                     line_no_leading_spaces =
-                        String::from(&line_no_leading_spaces[comment_starter.len()..]);
+                        &line_no_leading_spaces[comment_starter.len()..];
                 }
     
             //<> apply whitespace depth
