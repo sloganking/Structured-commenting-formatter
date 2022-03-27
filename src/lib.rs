@@ -409,6 +409,21 @@ pub mod strfmt {
                             } else {
                                 // last was not structured
                                 comment_tracker.pop();
+
+                                //> end the last structured comment(s)
+                                    while !comment_tracker.is_empty()
+                                        && x <= comment_tracker[comment_tracker.len() - 1].depth
+                                    {
+                                        let close_bracket_line = new_comment_closed_bracket(
+                                            comment_tracker[comment_tracker.len() - 1].depth,
+                                            filetype,
+                                        )
+                                        .unwrap();
+                                        lines_list.push(close_bracket_line);
+                                        cur_line += 1;
+                                        comment_tracker.pop();
+                                    }
+                                //<
                             }
                             unsure_if_last_comment_was_structured = false;
 
