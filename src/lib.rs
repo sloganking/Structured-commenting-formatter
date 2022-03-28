@@ -241,6 +241,19 @@ pub mod strfmt {
         Some(result)
     }
 
+    fn end_the_last_structured_comments(lines_list: &mut Vec<String>, comment_tracker: &mut Vec<CommentDetail>, cur_line: &mut usize, x: usize, filetype: &str) {
+        while !comment_tracker.is_empty() && x <= comment_tracker[comment_tracker.len() - 1].depth {
+            let close_bracket_line = new_comment_closed_bracket(
+                comment_tracker[comment_tracker.len() - 1].depth,
+                filetype,
+            )
+            .unwrap();
+            lines_list.push(close_bracket_line);
+            *cur_line += 1;
+            comment_tracker.pop();
+        }
+    }
+
     pub fn convert_to_brackets(str: &str, filetype: &str) -> Option<String> {
         //> determine if file compatible
             let filetype_to_comment = gen_compatable_file_table();
@@ -312,19 +325,8 @@ pub mod strfmt {
                                     // last was not structured
                                     comment_tracker.pop();
 
-                                    //> end the last structured comment(s)
-                                        while !comment_tracker.is_empty()
-                                            && x <= comment_tracker[comment_tracker.len() - 1].depth
-                                        {
-                                            let close_bracket_line = new_comment_closed_bracket(
-                                                comment_tracker[comment_tracker.len() - 1].depth,
-                                                filetype,
-                                            )
-                                            .unwrap();
-                                            lines_list.push(close_bracket_line);
-                                            cur_line += 1;
-                                            comment_tracker.pop();
-                                        }
+                                    end_the_last_structured_comments(&mut lines_list, &mut comment_tracker, &mut cur_line, x, filetype);
+                                        
                                     //<> pass a new comment that we don't know if it's structured
                                         let comment = CommentDetail {
                                             line: cur_line,
@@ -352,21 +354,9 @@ pub mod strfmt {
                                     cur_line += 1;
                                 //<
                             } else {
-                                //> end the last structured comment(s)
-                                    while !comment_tracker.is_empty()
-                                        && x <= comment_tracker[comment_tracker.len() - 1].depth
-                                    {
-                                        let close_bracket_line = new_comment_closed_bracket(
-                                            comment_tracker[comment_tracker.len() - 1].depth,
-                                            filetype,
-                                        )
-                                        .unwrap();
-                                        lines_list.push(close_bracket_line);
-                                        cur_line += 1;
-                                        comment_tracker.pop();
-                                    }
+                                end_the_last_structured_comments(&mut lines_list, &mut comment_tracker, &mut cur_line, x, filetype);
     
-                                //<> pass a new comment that we don't know if it's structured
+                                //> pass a new comment that we don't know if it's structured
                                     let comment = CommentDetail {
                                         line: cur_line,
                                         depth: leading_spaces.unwrap(),
@@ -410,20 +400,7 @@ pub mod strfmt {
                                 // last was not structured
                                 comment_tracker.pop();
 
-                                //> end the last structured comment(s)
-                                    while !comment_tracker.is_empty()
-                                        && x <= comment_tracker[comment_tracker.len() - 1].depth
-                                    {
-                                        let close_bracket_line = new_comment_closed_bracket(
-                                            comment_tracker[comment_tracker.len() - 1].depth,
-                                            filetype,
-                                        )
-                                        .unwrap();
-                                        lines_list.push(close_bracket_line);
-                                        cur_line += 1;
-                                        comment_tracker.pop();
-                                    }
-                                //<
+                                end_the_last_structured_comments(&mut lines_list, &mut comment_tracker, &mut cur_line, x, filetype);
                             }
                             unsure_if_last_comment_was_structured = false;
 
@@ -433,20 +410,10 @@ pub mod strfmt {
                             lines_list.push(String::from(line));
                             cur_line += 1;
                         } else {
-                            //> end the last structured comment(s)
-                                while !comment_tracker.is_empty()
-                                    && x <= comment_tracker[comment_tracker.len() - 1].depth
-                                {
-                                    let close_bracket_line = new_comment_closed_bracket(
-                                        comment_tracker[comment_tracker.len() - 1].depth,
-                                        filetype,
-                                    )
-                                    .unwrap();
-                                    lines_list.push(close_bracket_line);
-                                    cur_line += 1;
-                                    comment_tracker.pop();
-                                }
-                            //<> forward the current line
+
+                            end_the_last_structured_comments(&mut lines_list, &mut comment_tracker, &mut cur_line, x, filetype);
+
+                            //> forward the current line
                                 lines_list.push(String::from(line));
                                 cur_line += 1;
                             //<
