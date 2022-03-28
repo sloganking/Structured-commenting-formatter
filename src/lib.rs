@@ -280,6 +280,17 @@ pub mod strfmt {
         *cur_line += 1;
     }
 
+    fn add_bracket_to_last_comment(
+        lines_list: &mut Vec<String>,
+        comment_tracker: &mut Vec<CommentDetail>,
+        filetype: &str,
+    ) {
+        let line_with_no_bracket = &lines_list[comment_tracker[comment_tracker.len() - 1].line];
+
+        lines_list[comment_tracker[comment_tracker.len() - 1].line] =
+            make_comment_open_bracket(line_with_no_bracket, filetype).unwrap();
+    }
+
     pub fn convert_to_brackets(str: &str, filetype: &str) -> Option<String> {
         //> determine if file compatible
             let filetype_to_comment = gen_compatable_file_table();
@@ -308,7 +319,7 @@ pub mod strfmt {
                     }
                 }
     
-            //<> remove comment notation if it exists
+            //<> determine if line is a comment
                 let comment_starter_with_space = comment_starter.to_owned() + " ";
                 let mut is_a_comment = false;
                 if line_no_leading_spaces.starts_with(&comment_starter_with_space)
@@ -325,15 +336,12 @@ pub mod strfmt {
                             if unsure_if_last_comment_was_structured {
                                 if x > comment_tracker[comment_tracker.len() - 1].depth {
                                     // last was structured
-                                    //> add bracket to last comment
-    
-                                        let line_with_no_bracket = &lines_list
-                                            [comment_tracker[comment_tracker.len() - 1].line];
-    
-                                        lines_list[comment_tracker[comment_tracker.len() - 1].line] =
-                                            make_comment_open_bracket(line_with_no_bracket, filetype)
-                                                .unwrap();
-                                    //<
+
+                                    add_bracket_to_last_comment(
+                                        &mut lines_list,
+                                        &mut comment_tracker,
+                                        filetype,
+                                    );
 
                                     pass_a_new_comment_that_we_dont_know_if_its_structured(
                                         &mut lines_list,
@@ -345,6 +353,7 @@ pub mod strfmt {
                                     );
                                 } else {
                                     // last was not structured
+
                                     comment_tracker.pop();
 
                                     end_the_last_structured_comments(
@@ -392,32 +401,24 @@ pub mod strfmt {
                                 );
                             }
                         } else {
-                            //> pass a comment that we don't know if it's structured
-                                let comment = CommentDetail {
-                                    line: cur_line,
-                                    depth: leading_spaces.unwrap(),
-                                };
-    
-                                comment_tracker.push(comment);
-                                unsure_if_last_comment_was_structured = true;
-    
-                                lines_list.push(String::from(line));
-                                cur_line += 1;
-                            //<
+                            pass_a_new_comment_that_we_dont_know_if_its_structured(
+                                &mut lines_list,
+                                &mut comment_tracker,
+                                &mut cur_line,
+                                leading_spaces,
+                                &mut unsure_if_last_comment_was_structured,
+                                line,
+                            );
                         }
                     } else if !comment_tracker.is_empty() {
                         if unsure_if_last_comment_was_structured {
                             if x > comment_tracker[comment_tracker.len() - 1].depth {
                                 // last was structured
-                                //> add bracket to last comment
-    
-                                    let line_with_no_bracket =
-                                        &lines_list[comment_tracker[comment_tracker.len() - 1].line];
-    
-                                    lines_list[comment_tracker[comment_tracker.len() - 1].line] =
-                                        make_comment_open_bracket(line_with_no_bracket, filetype)
-                                            .unwrap();
-                                //<
+                                add_bracket_to_last_comment(
+                                    &mut lines_list,
+                                    &mut comment_tracker,
+                                    filetype,
+                                );
                             } else {
                                 // last was not structured
                                 comment_tracker.pop();
