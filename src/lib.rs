@@ -241,7 +241,13 @@ pub mod strfmt {
         Some(result)
     }
 
-    fn end_the_last_structured_comments(lines_list: &mut Vec<String>, comment_tracker: &mut Vec<CommentDetail>, cur_line: &mut usize, x: usize, filetype: &str) {
+    fn end_the_last_structured_comments(
+        lines_list: &mut Vec<String>,
+        comment_tracker: &mut Vec<CommentDetail>,
+        cur_line: &mut usize,
+        x: usize,
+        filetype: &str,
+    ) {
         while !comment_tracker.is_empty() && x <= comment_tracker[comment_tracker.len() - 1].depth {
             let close_bracket_line = new_comment_closed_bracket(
                 comment_tracker[comment_tracker.len() - 1].depth,
@@ -252,6 +258,26 @@ pub mod strfmt {
             *cur_line += 1;
             comment_tracker.pop();
         }
+    }
+
+    fn pass_a_new_comment_that_we_dont_know_if_its_structured(
+        lines_list: &mut Vec<String>,
+        comment_tracker: &mut Vec<CommentDetail>,
+        cur_line: &mut usize,
+        leading_spaces: Option<usize>,
+        unsure_if_last_comment_was_structured: &mut bool,
+        line: &str,
+    ) {
+        let comment = CommentDetail {
+            line: *cur_line,
+            depth: leading_spaces.unwrap(),
+        };
+
+        comment_tracker.push(comment);
+        *unsure_if_last_comment_was_structured = true;
+
+        lines_list.push(String::from(line));
+        *cur_line += 1;
     }
 
     pub fn convert_to_brackets(str: &str, filetype: &str) -> Option<String> {
@@ -295,7 +321,6 @@ pub mod strfmt {
             match leading_spaces {
                 Some(x) => {
                     if is_a_comment {
-                        // [TODO] still need to resolve unsure_if_last_comment_was_structured. Because multiple structured comments could come right after one another.
                         if !comment_tracker.is_empty() {
                             if unsure_if_last_comment_was_structured {
                                 if x > comment_tracker[comment_tracker.len() - 1].depth {
@@ -308,66 +333,63 @@ pub mod strfmt {
                                         lines_list[comment_tracker[comment_tracker.len() - 1].line] =
                                             make_comment_open_bracket(line_with_no_bracket, filetype)
                                                 .unwrap();
-    
-                                    //<> pass a new comment that we don't know if it's structured
-                                        let comment = CommentDetail {
-                                            line: cur_line,
-                                            depth: leading_spaces.unwrap(),
-                                        };
-    
-                                        comment_tracker.push(comment);
-                                        unsure_if_last_comment_was_structured = true;
-    
-                                        lines_list.push(String::from(line));
-                                        cur_line += 1;
                                     //<
+
+                                    pass_a_new_comment_that_we_dont_know_if_its_structured(
+                                        &mut lines_list,
+                                        &mut comment_tracker,
+                                        &mut cur_line,
+                                        leading_spaces,
+                                        &mut unsure_if_last_comment_was_structured,
+                                        line,
+                                    );
                                 } else {
                                     // last was not structured
                                     comment_tracker.pop();
 
-                                    end_the_last_structured_comments(&mut lines_list, &mut comment_tracker, &mut cur_line, x, filetype);
-                                        
-                                    //<> pass a new comment that we don't know if it's structured
-                                        let comment = CommentDetail {
-                                            line: cur_line,
-                                            depth: leading_spaces.unwrap(),
-                                        };
-    
-                                        comment_tracker.push(comment);
-                                        unsure_if_last_comment_was_structured = true;
-    
-                                        lines_list.push(String::from(line));
-                                        cur_line += 1;
-                                    //<
+                                    end_the_last_structured_comments(
+                                        &mut lines_list,
+                                        &mut comment_tracker,
+                                        &mut cur_line,
+                                        x,
+                                        filetype,
+                                    );
+
+                                    pass_a_new_comment_that_we_dont_know_if_its_structured(
+                                        &mut lines_list,
+                                        &mut comment_tracker,
+                                        &mut cur_line,
+                                        leading_spaces,
+                                        &mut unsure_if_last_comment_was_structured,
+                                        line,
+                                    );
                                 }
                             } else if x > comment_tracker[comment_tracker.len() - 1].depth {
-                                //> pass a new comment that we don't know if it's structured
-                                    let comment = CommentDetail {
-                                        line: cur_line,
-                                        depth: leading_spaces.unwrap(),
-                                    };
-    
-                                    comment_tracker.push(comment);
-                                    unsure_if_last_comment_was_structured = true;
-    
-                                    lines_list.push(String::from(line));
-                                    cur_line += 1;
-                                //<
+                                pass_a_new_comment_that_we_dont_know_if_its_structured(
+                                    &mut lines_list,
+                                    &mut comment_tracker,
+                                    &mut cur_line,
+                                    leading_spaces,
+                                    &mut unsure_if_last_comment_was_structured,
+                                    line,
+                                );
                             } else {
-                                end_the_last_structured_comments(&mut lines_list, &mut comment_tracker, &mut cur_line, x, filetype);
-    
-                                //> pass a new comment that we don't know if it's structured
-                                    let comment = CommentDetail {
-                                        line: cur_line,
-                                        depth: leading_spaces.unwrap(),
-                                    };
-    
-                                    comment_tracker.push(comment);
-                                    unsure_if_last_comment_was_structured = true;
-    
-                                    lines_list.push(String::from(line));
-                                    cur_line += 1;
-                                //<
+                                end_the_last_structured_comments(
+                                    &mut lines_list,
+                                    &mut comment_tracker,
+                                    &mut cur_line,
+                                    x,
+                                    filetype,
+                                );
+
+                                pass_a_new_comment_that_we_dont_know_if_its_structured(
+                                    &mut lines_list,
+                                    &mut comment_tracker,
+                                    &mut cur_line,
+                                    leading_spaces,
+                                    &mut unsure_if_last_comment_was_structured,
+                                    line,
+                                );
                             }
                         } else {
                             //> pass a comment that we don't know if it's structured
@@ -400,7 +422,13 @@ pub mod strfmt {
                                 // last was not structured
                                 comment_tracker.pop();
 
-                                end_the_last_structured_comments(&mut lines_list, &mut comment_tracker, &mut cur_line, x, filetype);
+                                end_the_last_structured_comments(
+                                    &mut lines_list,
+                                    &mut comment_tracker,
+                                    &mut cur_line,
+                                    x,
+                                    filetype,
+                                );
                             }
                             unsure_if_last_comment_was_structured = false;
 
@@ -410,8 +438,13 @@ pub mod strfmt {
                             lines_list.push(String::from(line));
                             cur_line += 1;
                         } else {
-
-                            end_the_last_structured_comments(&mut lines_list, &mut comment_tracker, &mut cur_line, x, filetype);
+                            end_the_last_structured_comments(
+                                &mut lines_list,
+                                &mut comment_tracker,
+                                &mut cur_line,
+                                x,
+                                filetype,
+                            );
 
                             //> forward the current line
                                 lines_list.push(String::from(line));
