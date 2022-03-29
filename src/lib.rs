@@ -363,13 +363,14 @@ pub mod strfmt {
         let mut should_consume_closing_comment = false;
 
         //> consume any previous now unecessary //<
+
+
+            let line_of_latest_comment = comment_tracker[comment_tracker.len() - 1].line;
     
-            // if there even could be a //< comment behind the current line
-            if lines_list.len() > 1 {
-
-                
-
-                let line_before_open_bracket_comment = &lines_list[comment_tracker[comment_tracker.len()-1].line-1];
+            // if there even could be a //< comment behind the lastest comment
+            if line_of_latest_comment > 0 {
+                let line_before_open_bracket_comment =
+                    &lines_list[line_of_latest_comment - 1];
     
                 //> chop off begining spaces
                     let mut line_no_leading_spaces = "";
@@ -396,16 +397,14 @@ pub mod strfmt {
         
                 //<
     
-                
-
-                let current_line = match count_and_remove_begining_spaces(lines_list.last().unwrap()){
+                let latest_comment = match count_and_remove_begining_spaces(&lines_list[line_of_latest_comment]) {
                     Some(x) => x,
-                    None => (0,String::from("")),
+                    None => (0, String::from("")),
                 };
     
                 if is_a_comment
                     && line_no_comment_opener.starts_with('<')
-                    && current_line.0 == leading_spaces.unwrap()
+                    && latest_comment.0 == leading_spaces.unwrap()
                 {
                     should_consume_closing_comment = true;
                 }
@@ -413,23 +412,28 @@ pub mod strfmt {
         //<
 
         let line_with_no_bracket =
-            lines_list[comment_tracker[comment_tracker.len() - 1].line].clone();
+            lines_list[line_of_latest_comment].clone();
 
         if should_consume_closing_comment {
-            //> overwrite the //< with new comment
-                let len = lines_list.len();
-                lines_list[len - 2] = lines_list[len - 1].clone();
-                lines_list.pop();
-                *cur_line -= 1;
-            //<> tell comment_tracker the comment was moved
-                let len = comment_tracker.len();
-                comment_tracker[len-1].line -= 1;
-            //<
+            // //> overwrite the //< with new comment
+            //     let len = lines_list.len();
+            //     lines_list[len - 2] = lines_list[len - 1].clone();
+            //     lines_list.pop();
+            //     *cur_line -= 1;
+            // //<> tell comment_tracker the comment was moved
+            //     let len = comment_tracker.len();
+            //     comment_tracker[len-1].line -= 1;
+            // //<
 
-            lines_list[comment_tracker[comment_tracker.len() - 1].line] =
+            // overwrite the //< with whitespace
+            lines_list[line_of_latest_comment - 1] = String::from("");
+
+            // append brackets to latest comment
+            lines_list[line_of_latest_comment] =
                 make_comment_closed_and_open_bracket(&line_with_no_bracket, filetype).unwrap();
         } else {
-            lines_list[comment_tracker[comment_tracker.len() - 1].line] =
+            // append bracket to latest comment
+            lines_list[line_of_latest_comment] =
                 make_comment_open_bracket(&line_with_no_bracket, filetype).unwrap();
         }
     }
@@ -480,10 +484,6 @@ pub mod strfmt {
                     is_a_comment = true;
                 }
             //<
-
-            if line == "    function botTools.initializeJumpIfSlowerThan()"{
-                println!();
-            }
 
             match leading_spaces {
                 Some(x) => {
