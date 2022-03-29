@@ -249,6 +249,13 @@ pub mod strfmt {
         filetype: &str,
     ) {
         while !comment_tracker.is_empty() && x <= comment_tracker[comment_tracker.len() - 1].depth {
+            //> remove above whitespace
+                while !lines_list.is_empty() && line_is_only_whitepace(lines_list.last().unwrap()) {
+                    lines_list.pop();
+                    *cur_line -= 1;
+                }
+            //<
+
             let close_bracket_line = new_comment_closed_bracket(
                 comment_tracker[comment_tracker.len() - 1].depth,
                 filetype,
@@ -289,6 +296,15 @@ pub mod strfmt {
 
         lines_list[comment_tracker[comment_tracker.len() - 1].line] =
             make_comment_open_bracket(line_with_no_bracket, filetype).unwrap();
+    }
+
+    fn line_is_only_whitepace(str: &str) -> bool {
+        for char in str.chars() {
+            if char as u32 > 32 {
+                return false;
+            }
+        }
+        true
     }
 
     pub fn convert_to_brackets(str: &str, filetype: &str) -> Option<String> {
@@ -465,7 +481,7 @@ pub mod strfmt {
         }
 
         //> last comment was not structured, if it was the last non empty line in the String
-            if unsure_if_last_comment_was_structured && !comment_tracker.is_empty(){
+            if unsure_if_last_comment_was_structured && !comment_tracker.is_empty() {
                 comment_tracker.pop();
             }
         //<
