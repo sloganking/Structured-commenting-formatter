@@ -280,7 +280,7 @@ pub mod strfmt {
         *cur_line += 1;
     }
 
-    fn add_bracket_to_last_comment(
+    fn add_open_bracket_to_last_comment(
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
         filetype: &str,
@@ -337,7 +337,7 @@ pub mod strfmt {
                                 if x > comment_tracker[comment_tracker.len() - 1].depth {
                                     // last was structured
 
-                                    add_bracket_to_last_comment(
+                                    add_open_bracket_to_last_comment(
                                         &mut lines_list,
                                         &mut comment_tracker,
                                         filetype,
@@ -414,7 +414,7 @@ pub mod strfmt {
                         if unsure_if_last_comment_was_structured {
                             if x > comment_tracker[comment_tracker.len() - 1].depth {
                                 // last was structured
-                                add_bracket_to_last_comment(
+                                add_open_bracket_to_last_comment(
                                     &mut lines_list,
                                     &mut comment_tracker,
                                     filetype,
