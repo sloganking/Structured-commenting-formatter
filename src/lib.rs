@@ -183,6 +183,46 @@ pub mod strfmt {
         depth: usize,
     }
 
+    fn make_comment_closed_and_open_bracket(str: &str, filetype: &str) -> Option<String> {
+        //> determine if file compatible
+            let filetype_to_comment = gen_compatable_file_table();
+            let comment_starter = match filetype_to_comment.get(filetype) {
+                Some(x) => *x,
+                None => return None,
+            };
+    
+        //<> chop off begining spaces
+            let mut line_no_leading_spaces = "";
+            let mut leading_spaces: Option<usize> = None;
+            let char_vec: Vec<char> = str.chars().collect();
+            for (i, char) in char_vec.iter().enumerate() {
+                if *char as u32 > 32 {
+                    line_no_leading_spaces = &str[i..];
+                    leading_spaces = Some(i);
+                    break;
+                }
+            }
+    
+        //<> remove comment notation if it exists
+            let comment_starter_with_space = comment_starter.to_owned() + " ";
+            let mut is_a_comment = false;
+            if line_no_leading_spaces.starts_with(&comment_starter_with_space)
+                || line_no_leading_spaces.starts_with(comment_starter)
+            {
+                is_a_comment = true;
+            }
+        //<
+
+        if !is_a_comment {
+            return None;
+        }
+
+        let first_half = &str[..leading_spaces.unwrap() + comment_starter.len()];
+        let second_half = &str[leading_spaces.unwrap() + comment_starter.len()..];
+
+        Some(String::from(first_half) + "<>" + second_half)
+    }
+
     fn make_comment_open_bracket(str: &str, filetype: &str) -> Option<String> {
         //> determine if file compatible
             let filetype_to_comment = gen_compatable_file_table();
@@ -287,15 +327,111 @@ pub mod strfmt {
         *cur_line += 1;
     }
 
+    fn count_and_remove_begining_spaces(line: &str) -> Option<(usize, String)> {
+        //> chop off begining spaces
+            let mut line_no_leading_spaces = String::from("");
+            let mut leading_spaces: Option<usize> = None;
+            let char_vec: Vec<char> = line.chars().collect();
+            for (i, char) in char_vec.iter().enumerate() {
+                if *char as u32 > 32 {
+                    line_no_leading_spaces = (&line[i..]).to_owned();
+                    leading_spaces = Some(i);
+                    break;
+                }
+            }
+        //<
+        match leading_spaces {
+            Some(x) => return Some((x, line_no_leading_spaces)),
+            None => return None,
+        }
+    }
+
     fn add_open_bracket_to_last_comment(
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
+        cur_line: &mut usize,
         filetype: &str,
     ) {
-        let line_with_no_bracket = &lines_list[comment_tracker[comment_tracker.len() - 1].line];
+        //> determine if file compatible
+            let filetype_to_comment = gen_compatable_file_table();
+            let comment_starter = match filetype_to_comment.get(filetype) {
+                Some(x) => *x,
+                None => panic!(),
+            };
+        //<
 
-        lines_list[comment_tracker[comment_tracker.len() - 1].line] =
-            make_comment_open_bracket(line_with_no_bracket, filetype).unwrap();
+        let mut should_consume_closing_comment = false;
+
+        //> consume any previous now unecessary //<
+    
+            // if there even could be a //< comment behind the current line
+            if lines_list.len() > 1 {
+
+                
+
+                let line_before_open_bracket_comment = &lines_list[comment_tracker[comment_tracker.len()-1].line-1];
+    
+                //> chop off begining spaces
+                    let mut line_no_leading_spaces = "";
+                    let mut leading_spaces: Option<usize> = None;
+                    let char_vec: Vec<char> = line_before_open_bracket_comment.chars().collect();
+                    for (i, char) in char_vec.iter().enumerate() {
+                        if *char as u32 > 32 {
+                            line_no_leading_spaces = &line_before_open_bracket_comment[i..];
+                            leading_spaces = Some(i);
+                            break;
+                        }
+                    }
+                //<> remove comment notation if it exists
+                    let comment_starter_with_space = comment_starter.to_owned() + " ";
+                    let mut is_a_comment = false;
+                    let mut line_no_comment_opener = "";
+                    if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
+                        is_a_comment = true;
+                        line_no_comment_opener = &line_no_leading_spaces[comment_starter.len() + 1..];
+                    } else if line_no_leading_spaces.starts_with(comment_starter) {
+                        is_a_comment = true;
+                        line_no_comment_opener = &line_no_leading_spaces[comment_starter.len()..];
+                    }
+        
+                //<
+    
+                
+
+                let current_line = match count_and_remove_begining_spaces(lines_list.last().unwrap()){
+                    Some(x) => x,
+                    None => (0,String::from("")),
+                };
+    
+                if is_a_comment
+                    && line_no_comment_opener.starts_with('<')
+                    && current_line.0 == leading_spaces.unwrap()
+                {
+                    should_consume_closing_comment = true;
+                }
+            }
+        //<
+
+        let line_with_no_bracket =
+            lines_list[comment_tracker[comment_tracker.len() - 1].line].clone();
+
+        if should_consume_closing_comment {
+            //> overwrite the //< with new comment
+                let len = lines_list.len();
+                lines_list[len - 2] = lines_list[len - 1].clone();
+                lines_list.pop();
+                *cur_line -= 1;
+            //<> tell comment_tracker the comment was moved
+                let len = comment_tracker.len();
+                comment_tracker[len-1].line -= 1;
+            //<
+
+            lines_list[comment_tracker[comment_tracker.len() - 1].line] =
+                make_comment_closed_and_open_bracket(&line_with_no_bracket, filetype).unwrap();
+        } else {
+            lines_list[comment_tracker[comment_tracker.len() - 1].line] =
+                make_comment_open_bracket(&line_with_no_bracket, filetype).unwrap();
+        }
     }
 
     fn line_is_only_whitepace(str: &str) -> bool {
@@ -345,6 +481,10 @@ pub mod strfmt {
                 }
             //<
 
+            if line == "    function botTools.initializeJumpIfSlowerThan()"{
+                println!();
+            }
+
             match leading_spaces {
                 Some(x) => {
                     if is_a_comment {
@@ -356,6 +496,7 @@ pub mod strfmt {
                                     add_open_bracket_to_last_comment(
                                         &mut lines_list,
                                         &mut comment_tracker,
+                                        &mut cur_line,
                                         filetype,
                                     );
 
@@ -430,13 +571,16 @@ pub mod strfmt {
                         if unsure_if_last_comment_was_structured {
                             if x > comment_tracker[comment_tracker.len() - 1].depth {
                                 // last was structured
+
                                 add_open_bracket_to_last_comment(
                                     &mut lines_list,
                                     &mut comment_tracker,
+                                    &mut cur_line,
                                     filetype,
                                 );
                             } else {
                                 // last was not structured
+
                                 comment_tracker.pop();
 
                                 end_the_last_structured_comments(
