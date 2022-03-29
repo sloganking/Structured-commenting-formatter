@@ -464,6 +464,20 @@ pub mod strfmt {
             }
         }
 
+        //> last comment was not structured, if it was the last non empty line in the String
+            if unsure_if_last_comment_was_structured && !comment_tracker.is_empty(){
+                comment_tracker.pop();
+            }
+        //<
+
+        end_the_last_structured_comments(
+            &mut lines_list,
+            &mut comment_tracker,
+            &mut cur_line,
+            0,
+            filetype,
+        );
+
         let mut final_string = String::new();
         for line in lines_list {
             final_string.push_str(&line);
