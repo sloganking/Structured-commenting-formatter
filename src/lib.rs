@@ -362,14 +362,12 @@ pub mod strfmt {
         let mut should_consume_closing_comment = false;
 
         //> consume any previous now unecessary //<
-
-
+    
             let line_of_latest_comment = comment_tracker[comment_tracker.len() - 1].line;
     
             // if there even could be a //< comment behind the lastest comment
             if line_of_latest_comment > 0 {
-                let line_before_open_bracket_comment =
-                    &lines_list[line_of_latest_comment - 1];
+                let line_before_open_bracket_comment = &lines_list[line_of_latest_comment - 1];
     
                 //> chop off begining spaces
                     let mut line_no_leading_spaces = "";
@@ -396,10 +394,11 @@ pub mod strfmt {
         
                 //<
     
-                let latest_comment = match count_and_remove_begining_spaces(&lines_list[line_of_latest_comment]) {
-                    Some(x) => x,
-                    None => (0, String::from("")),
-                };
+                let latest_comment =
+                    match count_and_remove_begining_spaces(&lines_list[line_of_latest_comment]) {
+                        Some(x) => x,
+                        None => (0, String::from("")),
+                    };
     
                 if is_a_comment
                     && line_no_comment_opener.starts_with('<')
@@ -410,8 +409,7 @@ pub mod strfmt {
             }
         //<
 
-        let line_with_no_bracket =
-            lines_list[line_of_latest_comment].clone();
+        let line_with_no_bracket = lines_list[line_of_latest_comment].clone();
 
         if should_consume_closing_comment {
             // //> overwrite the //< with new comment
@@ -644,5 +642,84 @@ pub mod strfmt {
         final_string.pop();
 
         Some(final_string)
+    }
+
+    pub fn convert_to_bracketless_file(file: PathBuf) {
+        let extenstion = file.extension().unwrap().to_str().unwrap();
+        let contents = fs::read_to_string(&file).expect("Something went wrong reading the file");
+
+        let converted = convert_to_bracketless(&contents, extenstion).unwrap();
+
+        //> write file
+            let mut output = File::create(file).unwrap();
+            write!(output, "{}", converted).expect("failed to write file");
+        //<
+    }
+
+    pub fn convert_to_bracketless(str: &str, filetype: &str) -> Option<String> {
+        //> determine if file compatible
+            let filetype_to_comment = gen_compatable_file_table();
+            let comment_starter = match filetype_to_comment.get(filetype) {
+                Some(x) => *x,
+                None => return None,
+            };
+        //<
+
+        let mut formatted_str = String::new();
+
+        for line in str.lines() {
+            //> chop off begining spaces
+                let mut line_no_leading_spaces = "";
+                let mut leading_spaces: Option<usize> = None;
+                let char_vec: Vec<char> = line.chars().collect();
+                for (i, char) in char_vec.iter().enumerate() {
+                    if *char as u32 > 32 {
+                        line_no_leading_spaces = &line[i..];
+                        leading_spaces = Some(i);
+                        break;
+                    }
+                }
+    
+            //<> remove comment notation if it exists
+                let mut line_no_comment_starter = "";
+                let comment_starter_with_space = comment_starter.to_owned() + " ";
+                let mut is_a_comment = false;
+                if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
+                    is_a_comment = true;
+                    line_no_comment_starter = &line_no_leading_spaces[comment_starter.len() + 1..];
+                } else if line_no_leading_spaces.starts_with(comment_starter) {
+                    is_a_comment = true;
+                    line_no_comment_starter = &line_no_leading_spaces[comment_starter.len()..];
+                }
+            //<
+
+            if is_a_comment {
+                if line_no_comment_starter.starts_with("<>") {
+                    formatted_str.push_str(&(add_whitespace(
+                        &(comment_starter.to_owned() + &line_no_comment_starter[2..]),
+                        leading_spaces.unwrap().try_into().unwrap(),
+                        1,
+                    ) + "\n"));
+                } else if line_no_comment_starter.starts_with(">") {
+                    formatted_str.push_str(&(add_whitespace(
+                        &(comment_starter.to_owned() + &line_no_comment_starter[1..]),
+                        leading_spaces.unwrap().try_into().unwrap(),
+                        1,
+                    ) + "\n"));
+                } else if line_no_comment_starter.starts_with("<") {
+                    // remove line
+                    continue;
+                }else{
+                    formatted_str.push_str(&(line.to_owned() + "\n"));
+                }
+            } else {
+                formatted_str.push_str(&(line.to_owned() + "\n"));
+            }
+        }
+
+        // remove last '\n'
+        formatted_str.pop();
+
+        Some(formatted_str)
     }
 }
