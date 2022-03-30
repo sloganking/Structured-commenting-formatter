@@ -349,7 +349,6 @@ pub mod strfmt {
     fn add_open_bracket_to_last_comment(
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
-        cur_line: &mut usize,
         filetype: &str,
     ) {
         //> determine if file compatible
@@ -496,7 +495,6 @@ pub mod strfmt {
                                     add_open_bracket_to_last_comment(
                                         &mut lines_list,
                                         &mut comment_tracker,
-                                        &mut cur_line,
                                         filetype,
                                     );
 
@@ -575,7 +573,6 @@ pub mod strfmt {
                                 add_open_bracket_to_last_comment(
                                     &mut lines_list,
                                     &mut comment_tracker,
-                                    &mut cur_line,
                                     filetype,
                                 );
                             } else {
