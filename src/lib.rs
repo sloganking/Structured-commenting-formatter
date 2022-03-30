@@ -60,7 +60,6 @@ pub mod strfmt {
                 .filter(|e| fs::read_to_string(e).is_ok())
                 .collect();
         //<
-
         paths
     }
 
@@ -80,7 +79,6 @@ pub mod strfmt {
                 None => return None,
             };
         //<
-
         let mut formatted_file = String::from("");
 
         let tab_spaces = 4;
@@ -138,7 +136,6 @@ pub mod strfmt {
                     formatted_line = add_whitespace(line, current_tab_depth, tab_spaces);
                 }
             //<
-
             formatted_file.push_str(&(formatted_line + "\n"));
         }
 
@@ -150,7 +147,6 @@ pub mod strfmt {
                 panic!("unclosed comment at line: {}", bracket_stack.pop().unwrap());
             }
         //<
-
         Some(formatted_file)
     }
 
@@ -212,7 +208,6 @@ pub mod strfmt {
                 is_a_comment = true;
             }
         //<
-
         if !is_a_comment {
             return None;
         }
@@ -252,7 +247,6 @@ pub mod strfmt {
                 is_a_comment = true;
             }
         //<
-
         if !is_a_comment {
             return None;
         }
@@ -271,7 +265,6 @@ pub mod strfmt {
                 None => return None,
             };
         //<
-
         let mut result = String::new();
         for _i in 0..depth {
             result.push(' ');
@@ -295,7 +288,6 @@ pub mod strfmt {
                     *cur_line -= 1;
                 }
             //<
-
             let close_bracket_line = new_comment_closed_bracket(
                 comment_tracker[comment_tracker.len() - 1].depth,
                 filetype,
@@ -358,7 +350,6 @@ pub mod strfmt {
                 None => panic!(),
             };
         //<
-
         let mut should_consume_closing_comment = false;
 
         //> consume any previous now unecessary //<
@@ -380,6 +371,7 @@ pub mod strfmt {
                             break;
                         }
                     }
+        
                 //<> remove comment notation if it exists
                     let comment_starter_with_space = comment_starter.to_owned() + " ";
                     let mut is_a_comment = false;
@@ -391,9 +383,7 @@ pub mod strfmt {
                         is_a_comment = true;
                         line_no_comment_opener = &line_no_leading_spaces[comment_starter.len()..];
                     }
-        
                 //<
-    
                 let latest_comment =
                     match count_and_remove_begining_spaces(&lines_list[line_of_latest_comment]) {
                         Some(x) => x,
@@ -408,7 +398,6 @@ pub mod strfmt {
                 }
             }
         //<
-
         let line_with_no_bracket = lines_list[line_of_latest_comment].clone();
 
         if should_consume_closing_comment {
@@ -452,7 +441,6 @@ pub mod strfmt {
                 None => return None,
             };
         //<
-
         let mut comment_tracker: Vec<CommentDetail> = Vec::new();
 
         let mut lines_list: Vec<String> = Vec::new();
@@ -481,7 +469,6 @@ pub mod strfmt {
                     is_a_comment = true;
                 }
             //<
-
             match leading_spaces {
                 Some(x) => {
                     if is_a_comment {
@@ -624,7 +611,6 @@ pub mod strfmt {
                 comment_tracker.pop();
             }
         //<
-
         end_the_last_structured_comments(
             &mut lines_list,
             &mut comment_tracker,
@@ -664,7 +650,6 @@ pub mod strfmt {
                 None => return None,
             };
         //<
-
         let mut formatted_str = String::new();
 
         for line in str.lines() {
@@ -692,24 +677,27 @@ pub mod strfmt {
                     line_no_comment_starter = &line_no_leading_spaces[comment_starter.len()..];
                 }
             //<
-
             if is_a_comment {
                 if line_no_comment_starter.starts_with("<>") {
-                    formatted_str.push_str(&(add_whitespace(
-                        &(comment_starter.to_owned() + &line_no_comment_starter[2..]),
-                        leading_spaces.unwrap().try_into().unwrap(),
-                        1,
-                    ) + "\n"));
+                    formatted_str.push_str(
+                        &(add_whitespace(
+                            &(comment_starter.to_owned() + &line_no_comment_starter[2..]),
+                            leading_spaces.unwrap().try_into().unwrap(),
+                            1,
+                        ) + "\n"),
+                    );
                 } else if line_no_comment_starter.starts_with(">") {
-                    formatted_str.push_str(&(add_whitespace(
-                        &(comment_starter.to_owned() + &line_no_comment_starter[1..]),
-                        leading_spaces.unwrap().try_into().unwrap(),
-                        1,
-                    ) + "\n"));
+                    formatted_str.push_str(
+                        &(add_whitespace(
+                            &(comment_starter.to_owned() + &line_no_comment_starter[1..]),
+                            leading_spaces.unwrap().try_into().unwrap(),
+                            1,
+                        ) + "\n"),
+                    );
                 } else if line_no_comment_starter.starts_with("<") {
                     // remove line
                     continue;
-                }else{
+                } else {
                     formatted_str.push_str(&(line.to_owned() + "\n"));
                 }
             } else {
