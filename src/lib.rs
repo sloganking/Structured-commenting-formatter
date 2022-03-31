@@ -1,20 +1,12 @@
 // #[cfg(test)]
 // mod tests {
 //     use crate::strfmt;
-
-//     // #[test]
-//     // fn integration_test() {
-//     //     let paths = strfmt::get_files_in_dir("./test/", "");
-
-//     //     for file in paths {
-//     //         strfmt::format_file(file);
-//     //     }
-//     // }
-
-//     // #[test]
-//     // fn leading_spaces() {
-
-//     // }
+//     #[test]
+//     fn format_str() {
+//         let formatted = strfmt::format_str(str, "rs").unwrap();
+//         println!("{}",formatted);
+//         assert_eq!(correct, formatted);
+//     }
 // }
 
 pub mod strfmt {
@@ -441,6 +433,9 @@ pub mod strfmt {
                 None => return None,
             };
         //<
+        // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
+        let str = &convert_to_bracketless(str, filetype).unwrap();
+
         let mut comment_tracker: Vec<CommentDetail> = Vec::new();
 
         let mut lines_list: Vec<String> = Vec::new();
