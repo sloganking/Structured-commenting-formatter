@@ -1,13 +1,19 @@
-// #[cfg(test)]
-// mod tests {
-//     use crate::strfmt;
-//     #[test]
-//     fn format_str() {
-//         let formatted = strfmt::format_str(str, "rs").unwrap();
-//         println!("{}",formatted);
-//         assert_eq!(correct, formatted);
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use std::fs;
+
+    use crate::strfmt;
+
+    #[test]
+    fn format_str() {
+        let to_format = fs::read_to_string("./test_resources/1_test.rs").unwrap();
+        let answer = fs::read_to_string("./test_resources/1_answer.rs").unwrap();
+
+        let formatted = strfmt::format_str(&to_format, "rs").unwrap();
+
+        assert_eq!(answer, formatted);
+    }
+}
 
 pub mod strfmt {
 
