@@ -171,15 +171,8 @@ pub mod strfmt {
         depth: usize,
     }
 
-    fn make_comment_closed_and_open_bracket(str: &str, filetype: &str) -> Option<String> {
-        //> determine if file compatible
-            let filetype_to_comment = gen_compatable_file_table();
-            let comment_starter = match filetype_to_comment.get(filetype) {
-                Some(x) => *x,
-                None => return None,
-            };
-    
-        //<> chop off begining spaces
+    fn make_comment_closed_and_open_bracket(str: &str, comment_starter: &str) -> Option<String> {
+        //> chop off begining spaces
             let mut line_no_leading_spaces = "";
             let mut leading_spaces: Option<usize> = None;
             let char_vec: Vec<char> = str.chars().collect();
@@ -210,15 +203,8 @@ pub mod strfmt {
         Some(String::from(first_half) + "<>" + second_half)
     }
 
-    fn make_comment_open_bracket(str: &str, filetype: &str) -> Option<String> {
-        //> determine if file compatible
-            let filetype_to_comment = gen_compatable_file_table();
-            let comment_starter = match filetype_to_comment.get(filetype) {
-                Some(x) => *x,
-                None => return None,
-            };
-    
-        //<> chop off begining spaces
+    fn make_comment_open_bracket(str: &str, comment_starter: &str) -> Option<String> {
+        //> chop off begining spaces
             let mut line_no_leading_spaces = "";
             let mut leading_spaces: Option<usize> = None;
             let char_vec: Vec<char> = str.chars().collect();
@@ -249,14 +235,7 @@ pub mod strfmt {
         Some(String::from(first_half) + ">" + second_half)
     }
 
-    fn new_comment_closed_bracket(depth: usize, filetype: &str) -> Option<String> {
-        //> determine if file compatible
-            let filetype_to_comment = gen_compatable_file_table();
-            let comment_starter = match filetype_to_comment.get(filetype) {
-                Some(x) => *x,
-                None => return None,
-            };
-        //<
+    fn new_comment_closed_bracket(depth: usize, comment_starter: &str) -> Option<String> {
         let mut result = String::new();
         for _i in 0..depth {
             result.push(' ');
@@ -271,7 +250,7 @@ pub mod strfmt {
         comment_tracker: &mut Vec<CommentDetail>,
         cur_line: &mut usize,
         x: usize,
-        filetype: &str,
+        comment_starter: &str,
     ) {
         while !comment_tracker.is_empty() && x <= comment_tracker[comment_tracker.len() - 1].depth {
             //> remove above whitespace
@@ -282,7 +261,7 @@ pub mod strfmt {
             //<
             let close_bracket_line = new_comment_closed_bracket(
                 comment_tracker[comment_tracker.len() - 1].depth,
-                filetype,
+                comment_starter,
             )
             .unwrap();
             lines_list.push(close_bracket_line);
@@ -333,15 +312,8 @@ pub mod strfmt {
     fn add_open_bracket_to_last_comment(
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
-        filetype: &str,
+        comment_starter: &str,
     ) {
-        //> determine if file compatible
-            let filetype_to_comment = gen_compatable_file_table();
-            let comment_starter = match filetype_to_comment.get(filetype) {
-                Some(x) => *x,
-                None => panic!(),
-            };
-        //<
         let mut should_consume_closing_comment = false;
 
         //> consume any previous now unecessary //<
@@ -408,11 +380,12 @@ pub mod strfmt {
 
             // append brackets to latest comment
             lines_list[line_of_latest_comment] =
-                make_comment_closed_and_open_bracket(&line_with_no_bracket, filetype).unwrap();
+                make_comment_closed_and_open_bracket(&line_with_no_bracket, comment_starter)
+                    .unwrap();
         } else {
             // append bracket to latest comment
             lines_list[line_of_latest_comment] =
-                make_comment_open_bracket(&line_with_no_bracket, filetype).unwrap();
+                make_comment_open_bracket(&line_with_no_bracket, comment_starter).unwrap();
         }
     }
 
@@ -475,7 +448,7 @@ pub mod strfmt {
                                     add_open_bracket_to_last_comment(
                                         &mut lines_list,
                                         &mut comment_tracker,
-                                        filetype,
+                                        comment_starter,
                                     );
 
                                     pass_a_new_comment_that_we_dont_know_if_its_structured(
@@ -496,7 +469,7 @@ pub mod strfmt {
                                         &mut comment_tracker,
                                         &mut cur_line,
                                         x,
-                                        filetype,
+                                        comment_starter,
                                     );
 
                                     pass_a_new_comment_that_we_dont_know_if_its_structured(
@@ -523,7 +496,7 @@ pub mod strfmt {
                                     &mut comment_tracker,
                                     &mut cur_line,
                                     x,
-                                    filetype,
+                                    comment_starter,
                                 );
 
                                 pass_a_new_comment_that_we_dont_know_if_its_structured(
@@ -553,7 +526,7 @@ pub mod strfmt {
                                 add_open_bracket_to_last_comment(
                                     &mut lines_list,
                                     &mut comment_tracker,
-                                    filetype,
+                                    comment_starter,
                                 );
                             } else {
                                 // last was not structured
@@ -565,7 +538,7 @@ pub mod strfmt {
                                     &mut comment_tracker,
                                     &mut cur_line,
                                     x,
-                                    filetype,
+                                    comment_starter,
                                 );
                             }
                             unsure_if_last_comment_was_structured = false;
@@ -581,7 +554,7 @@ pub mod strfmt {
                                 &mut comment_tracker,
                                 &mut cur_line,
                                 x,
-                                filetype,
+                                comment_starter,
                             );
 
                             //> forward the current line
@@ -611,7 +584,7 @@ pub mod strfmt {
             &mut comment_tracker,
             &mut cur_line,
             0,
-            filetype,
+            comment_starter,
         );
 
         let mut final_string = String::new();
