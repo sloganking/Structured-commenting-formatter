@@ -56,6 +56,22 @@ pub mod strfmt {
         value + line
     }
 
+    fn set_whitespace(str: &str, depth: usize) -> String {
+        let str_no_whitespace = match count_and_remove_begining_spaces(str) {
+            Some(x) => x.1,
+            None => "".to_owned(),
+        };
+
+        //> generate whitespace
+            let mut whitespace = String::from("");
+            for _i in 0..depth {
+                whitespace.push(' ');
+            }
+        //<
+
+        whitespace + &str_no_whitespace
+    }
+
     pub fn get_files_in_dir(path: &str, filetype: &str) -> Vec<PathBuf> {
         //> get list of all files and dirs in ./input/ using glob
             let mut paths = Vec::new();
@@ -91,6 +107,41 @@ pub mod strfmt {
         filetype_to_comment
     }
 
+    fn ensure_previous_lines_have_correct_whitespace(
+        formatted_lines: &mut Vec<String>,
+        comment_tracker: &mut Vec<CommentDetail>,
+        tab_spaces: i32,
+    ) {
+        //> determine how much whitespace should be added
+            let mut lowest_depth =
+                comment_tracker[comment_tracker.len() - 1].depth + tab_spaces as usize;
+            let line_of_last_unclosed_comment = comment_tracker[comment_tracker.len() - 1].line;
+            for i in line_of_last_unclosed_comment + 1..formatted_lines.len() {
+                let spaces_option = count_and_remove_begining_spaces(&formatted_lines[i]);
+                match spaces_option {
+                    Some(spaces_tuple) => {
+                        if spaces_tuple.0 < lowest_depth {
+                            lowest_depth = spaces_tuple.0;
+                        }
+                    }
+                    None => continue,
+                }
+            }
+        //<> add any needed whitespace
+            if lowest_depth < comment_tracker[comment_tracker.len() - 1].depth + tab_spaces as usize {
+                let depth_difference = comment_tracker[comment_tracker.len() - 1].depth
+                    + tab_spaces as usize
+                    - lowest_depth;
+                if depth_difference > 0 {
+                    for i in line_of_last_unclosed_comment + 1..formatted_lines.len() {
+                        formatted_lines[i] =
+                            add_whitespace(&formatted_lines[i], depth_difference.try_into().unwrap(), 1)
+                    }
+                }
+            }
+        //<
+    }
+
     pub fn format_str(str: &str, filetype: &str) -> Option<String> {
         //> determine if file compatible
             let filetype_to_comment = gen_compatable_file_table();
@@ -100,20 +151,23 @@ pub mod strfmt {
             };
         //<
         let mut formatted_file = String::from("");
+        let mut formatted_lines: Vec<String> = Vec::new();
 
         let tab_spaces = 4;
-        let mut current_tab_depth = 0;
-        let mut bracket_stack = Vec::new();
+
+        let mut comment_tracker: Vec<CommentDetail> = Vec::new();
 
         let lines = str.lines();
 
         for (i, line) in lines.enumerate() {
             //> chop off begining spaces
                 let mut line_no_leading_spaces = "";
+                let mut leading_spaces: Option<usize> = None;
                 let char_vec: Vec<char> = line.chars().collect();
                 for (i, char) in char_vec.iter().enumerate() {
                     if *char as u32 > 32 {
                         line_no_leading_spaces = &line[i..];
+                        leading_spaces = Some(i);
                         break;
                     }
                 }
@@ -133,38 +187,75 @@ pub mod strfmt {
                 let formatted_line;
     
                 if is_a_comment & line_no_leading_spaces.starts_with('>') {
-                    formatted_line = add_whitespace(line, current_tab_depth, tab_spaces);
-                    current_tab_depth += 1;
-                    bracket_stack.push(i + 1);
+                    formatted_line = line.to_string();
+    
+                    //> add comment to comment tracker
+                        let comment = CommentDetail {
+                            line: i,
+                            depth: leading_spaces.unwrap(),
+                        };
+                        comment_tracker.push(comment);
+                    //<
                 } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
-                    if current_tab_depth == 0 {
+                    if comment_tracker.len() == 0 {
                         panic!("<> closed nothing at line: {}", i + 1)
                     }
-                    current_tab_depth -= 1;
-                    formatted_line = add_whitespace(line, current_tab_depth, tab_spaces);
-                    current_tab_depth += 1;
-                    bracket_stack.pop();
-                    bracket_stack.push(i + 1);
+    
+                    ensure_previous_lines_have_correct_whitespace(
+                        &mut formatted_lines,
+                        &mut comment_tracker,
+                        tab_spaces,
+                    );
+    
+                    formatted_line =
+                        set_whitespace(line, comment_tracker[comment_tracker.len() - 1].depth);
+    
+                    //> remove and add comment to comment tracker
+                        let comment = CommentDetail {
+                            line: i,
+                            depth: comment_tracker[comment_tracker.len() - 1].depth,
+                        };
+                        comment_tracker.pop();
+                        comment_tracker.push(comment);
+                    //<
                 } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
-                    if current_tab_depth == 0 {
+                    if comment_tracker.len() == 0 {
                         panic!("< closed nothing at line: {}", i + 1)
                     }
-                    current_tab_depth -= 1;
-                    formatted_line = add_whitespace(line, current_tab_depth, tab_spaces);
-                    bracket_stack.pop();
+    
+                    ensure_previous_lines_have_correct_whitespace(
+                        &mut formatted_lines,
+                        &mut comment_tracker,
+                        tab_spaces,
+                    );
+    
+                    formatted_line =
+                        set_whitespace(line, comment_tracker[comment_tracker.len() - 1].depth);
+    
+                    // remove comment from comment tracker
+                    comment_tracker.pop();
                 } else {
-                    formatted_line = add_whitespace(line, current_tab_depth, tab_spaces);
+                    formatted_line = line.to_string();
                 }
             //<
-            formatted_file.push_str(&(formatted_line + "\n"));
+            formatted_lines.push(formatted_line + "\n");
         }
+
+        //> turn all lines into one string
+            for line in formatted_lines {
+                formatted_file.push_str(&line);
+            }
+        //<
 
         // remove last \n
         formatted_file.pop();
 
         //> ensure formatting successful
-            if current_tab_depth != 0 {
-                panic!("unclosed comment at line: {}", bracket_stack.pop().unwrap());
+            if comment_tracker.len() != 0 {
+                panic!(
+                    "unclosed comment at line: {}",
+                    comment_tracker[comment_tracker.len() - 1].line + 1
+                );
             }
         //<
         Some(formatted_file)
@@ -321,10 +412,12 @@ pub mod strfmt {
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
         cur_line: &mut usize,
-        x: usize,
+        leading_spaces: usize,
         comment_starter: &str,
     ) {
-        while !comment_tracker.is_empty() && x <= comment_tracker[comment_tracker.len() - 1].depth {
+        while !comment_tracker.is_empty()
+            && leading_spaces <= comment_tracker[comment_tracker.len() - 1].depth
+        {
             //> remove above whitespace
                 while !lines_list.is_empty() && line_is_only_whitepace(lines_list.last().unwrap()) {
                     lines_list.pop();

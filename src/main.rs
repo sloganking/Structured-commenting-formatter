@@ -5,9 +5,11 @@ use std::env;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
+    let dir = "./src/";
+
     if args.len() == 1 {
         //> format ./src/
-            let paths = strfmt::get_files_in_dir("./src/", "");
+            let paths = strfmt::get_files_in_dir(dir, "");
     
             for file in paths {
                 strfmt::format_file(file);
@@ -18,14 +20,14 @@ fn main() {
 
         if flag == "add_brackets" {
             //> convert to brackets
-                let paths = strfmt::get_files_in_dir("./src/", "");
+                let paths = strfmt::get_files_in_dir(dir, "");
                 for file in paths {
                     strfmt::convert_to_brackets_file(file);
                 }
             //<
         } else if flag == "remove_brackets" {
             //> convert to bracketless
-                let paths = strfmt::get_files_in_dir("./src/", "");
+                let paths = strfmt::get_files_in_dir(dir, "");
                 for file in paths {
                     strfmt::convert_to_bracketless_file(file)
                 }
