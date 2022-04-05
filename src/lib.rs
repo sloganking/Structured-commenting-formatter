@@ -77,7 +77,7 @@ pub mod strfmt {
             let mut paths = Vec::new();
     
             let mut potential_slash = "";
-            if PathBuf::from(path).is_dir() && path.chars().last().unwrap() != '/' {
+            if PathBuf::from(path).is_dir() && !path.ends_with('/') {
                 potential_slash = "/";
             }
     
@@ -224,7 +224,7 @@ pub mod strfmt {
                         comment_tracker.push(comment);
                     //<
                 } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
-                    if comment_tracker.len() == 0 {
+                    if comment_tracker.is_empty() {
                         panic!("< closed nothing at line: {}", i + 1)
                     }
     
@@ -256,7 +256,7 @@ pub mod strfmt {
         formatted_file.pop();
 
         //> ensure formatting successful
-            if comment_tracker.len() != 0 {
+            if !comment_tracker.is_empty() {
                 panic!(
                     "unclosed comment at line: {}",
                     comment_tracker[comment_tracker.len() - 1].line + 1
@@ -474,8 +474,8 @@ pub mod strfmt {
             }
         //<
         match leading_spaces {
-            Some(x) => return Some((x, line_no_leading_spaces)),
-            None => return None,
+            Some(x) => Some((x, line_no_leading_spaces)),
+            None => None,
         }
     }
 
@@ -818,7 +818,7 @@ pub mod strfmt {
                             1,
                         ) + "\n"),
                     );
-                } else if line_no_comment_starter.starts_with(">") {
+                } else if line_no_comment_starter.starts_with('>') {
                     formatted_str.push_str(
                         &(add_whitespace(
                             &(comment_starter.to_owned() + &line_no_comment_starter[1..]),
@@ -826,7 +826,7 @@ pub mod strfmt {
                             1,
                         ) + "\n"),
                     );
-                } else if line_no_comment_starter.starts_with("<") {
+                } else if line_no_comment_starter.starts_with('<') {
                     // remove line
                     continue;
                 } else {

@@ -5,7 +5,6 @@ use std::{env, path::PathBuf};
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let dir = "./src/";
     if args.len() == 1 {
         panic!("strfmt was passed too few arguments");
     } else if args.len() == 2 {
