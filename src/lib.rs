@@ -777,16 +777,33 @@ pub mod strfmt {
         Some(final_string)
     }
 
-    pub fn convert_to_bracketless_file(file: PathBuf) {
-        let extenstion = file.extension().unwrap().to_str().unwrap();
-        let contents = fs::read_to_string(&file).expect("Something went wrong reading the file");
+    pub fn convert_to_bracketless_file(file: PathBuf) -> bool {
 
-        let converted = convert_to_bracketless(&contents, extenstion).unwrap();
+
+        let extenstion = match file.extension() {
+            Some(x) => match x.to_str() {
+                Some(x) => x,
+                None => return false,
+            },
+            None => return false,
+        };
+
+        let contents = match fs::read_to_string(&file) {
+            Ok(x) => x,
+            Err(_) => return false,
+        };
+
+        let converted = match convert_to_bracketless(&contents, extenstion) {
+            Some(x) => x,
+            None => return false,
+        };
 
         //> write file
             let mut output = File::create(file).unwrap();
             write!(output, "{}", converted).expect("failed to write file");
         //<
+
+        true
     }
 
     pub fn convert_to_bracketless(str: &str, filetype: &str) -> Option<String> {
