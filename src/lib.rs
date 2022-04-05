@@ -11,7 +11,7 @@ mod tests {
         let formatted = strfmt::format_str(&to_format, "rs").unwrap();
         assert_eq!(answer, formatted);
     }
-    
+
     #[test]
     fn add_brackets() {
         let to_format = fs::read_to_string("./test_resources/2_test.rs").unwrap();
@@ -792,8 +792,6 @@ pub mod strfmt {
     }
 
     pub fn convert_to_bracketless_file(file: PathBuf) -> bool {
-
-
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
