@@ -24,6 +24,28 @@ pub mod strfmt {
     use std::io::Write;
     use std::path::PathBuf;
 
+    // fn determine_whitespace_type(str: &str) -> (char,u32) {
+
+    //     let mut chr = ' ';
+    //     let mut num = 4;
+
+    //     for line in str.lines(){
+    //         match line.chars().nth(0){
+    //             Some(x) => match x {
+    //                 ' ' => {
+    //                     num = 1;
+    //                     for
+    //                 },
+    //                 '\t' => ,
+    //                 _ => ,
+    //             },
+    //             None => continue,
+    //         }
+    //     }
+
+    //     ('a',0)
+    // }
+
     fn add_whitespace(line: &str, tab_depth: u32, tab_spaces: u32) -> String {
         let mut value = String::from("");
 
@@ -149,35 +171,33 @@ pub mod strfmt {
     }
 
     pub fn format_file(file: PathBuf) -> bool {
-        let extenstion = match file.extension(){
-            Some(x) => {
-                match x.to_str() {
-                    Some(x) => x,
-                    None => return false
-                }
+        let extenstion = match file.extension() {
+            Some(x) => match x.to_str() {
+                Some(x) => x,
+                None => return false,
             },
             None => return false,
         };
 
-        let contents = match fs::read_to_string(&file){
-                Ok(x) => x,
-                Err(_) => return false
+        let contents = match fs::read_to_string(&file) {
+            Ok(x) => x,
+            Err(_) => return false,
         };
 
-        let formatted = match format_str(&contents, extenstion){
+        let formatted = match format_str(&contents, extenstion) {
             Some(x) => x,
-            None => return false
+            None => return false,
         };
 
         //> write file
-            let mut output = match File::create(file){
+            let mut output = match File::create(file) {
                 Ok(x) => x,
-                Err(_) => return false
+                Err(_) => return false,
             };
-
-            match write!(output, "{}", formatted){
+    
+            match write!(output, "{}", formatted) {
                 Ok(x) => x,
-                Err(_) => return false
+                Err(_) => return false,
             };
         //<
 
@@ -185,36 +205,33 @@ pub mod strfmt {
     }
 
     pub fn convert_to_brackets_file(file: PathBuf) -> bool {
-
-        let extenstion = match file.extension(){
-            Some(x) => {
-                match x.to_str() {
-                    Some(x) => x,
-                    None => return false
-                }
+        let extenstion = match file.extension() {
+            Some(x) => match x.to_str() {
+                Some(x) => x,
+                None => return false,
             },
             None => return false,
         };
 
-        let contents = match fs::read_to_string(&file){
-                Ok(x) => x,
-                Err(_) => return false
+        let contents = match fs::read_to_string(&file) {
+            Ok(x) => x,
+            Err(_) => return false,
         };
 
-        let converted = match convert_to_brackets(&contents, extenstion){
+        let converted = match convert_to_brackets(&contents, extenstion) {
             Some(x) => x,
-            None => return false
+            None => return false,
         };
 
         //> write file
-            let mut output = match File::create(file){
+            let mut output = match File::create(file) {
                 Ok(x) => x,
-                Err(_) => return false
+                Err(_) => return false,
             };
-
-            match write!(output, "{}", converted){
+    
+            match write!(output, "{}", converted) {
                 Ok(x) => x,
-                Err(_) => return false
+                Err(_) => return false,
             };
         //<
 
