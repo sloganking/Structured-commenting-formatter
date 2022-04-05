@@ -783,6 +783,10 @@ pub mod strfmt {
                 None => return None,
             };
         //<
+
+        //format str before removing brackets, to ensure their information is not lost.
+        let str = format_str(str, filetype)?;
+
         let mut formatted_str = String::new();
 
         for line in str.lines() {
