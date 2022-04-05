@@ -76,7 +76,12 @@ pub mod strfmt {
         //> get list of all files and dirs in ./input/ using glob
             let mut paths = Vec::new();
     
-            let search_params = String::from(path) + "**/*" + filetype;
+            let mut potential_slash = "";
+            if PathBuf::from(path).is_dir() && path.chars().last().unwrap() != '/' {
+                potential_slash = "/";
+            }
+    
+            let search_params = String::from(path) + potential_slash + "**/*" + filetype;
     
             for entry in glob(&search_params).expect("Failed to read glob pattern") {
                 match entry {
@@ -530,16 +535,6 @@ pub mod strfmt {
         let line_with_no_bracket = lines_list[line_of_latest_comment].clone();
 
         if should_consume_closing_comment {
-            // //> overwrite the //< with new comment
-            //     let len = lines_list.len();
-            //     lines_list[len - 2] = lines_list[len - 1].clone();
-            //     lines_list.pop();
-            //     *cur_line -= 1;
-            // //<> tell comment_tracker the comment was moved
-            //     let len = comment_tracker.len();
-            //     comment_tracker[len-1].line -= 1;
-            // //<
-
             // overwrite the //< with whitespace
             lines_list[line_of_latest_comment - 1] = String::from("");
 
