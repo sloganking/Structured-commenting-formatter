@@ -20,7 +20,7 @@ fn main() {
             //> convert to brackets
                 let paths = strfmt::get_files_in_dir("./src/", "");
                 for file in paths {
-                    strfmt::convert_to_brackets_file(file)
+                    strfmt::convert_to_brackets_file(file);
                 }
             //<
         } else if flag == "remove_brackets" {
