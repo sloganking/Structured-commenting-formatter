@@ -106,9 +106,28 @@ pub mod strfmt {
 
     fn gen_compatable_file_table() -> HashMap<&'static str, &'static str> {
         let mut filetype_to_comment = HashMap::new();
+        filetype_to_comment.insert("asm", ";");
+        filetype_to_comment.insert("c", "//");
+        filetype_to_comment.insert("cpp", "//");
+        filetype_to_comment.insert("go", "//");
+        //> Haskell
+            filetype_to_comment.insert("hs", "--");
+            filetype_to_comment.insert("lhs", "--");
+        //<
         filetype_to_comment.insert("java", "//");
+        //> JavaScript
+            filetype_to_comment.insert("js", "//");
+            filetype_to_comment.insert("cjs", "//");
+            filetype_to_comment.insert("mjs", "//");
+        //<
         filetype_to_comment.insert("lua", "--");
         filetype_to_comment.insert("rs", "//");
+        filetype_to_comment.insert("sh", "#");
+        filetype_to_comment.insert("sol", "//");
+        //> TypeScript
+            filetype_to_comment.insert("ts", "//");
+            filetype_to_comment.insert("tsx", "//");
+        //<
         filetype_to_comment
     }
 
