@@ -25,7 +25,7 @@ fn main() {
         let flag = &args[1];
 
         if flag == "add_brackets" {
-            let dir = &args[1];
+            let dir = &args[2];
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
@@ -39,7 +39,7 @@ fn main() {
                 panic!("second arg must be a path or file");
             }
         } else if flag == "remove_brackets" {
-            let dir = &args[1];
+            let dir = &args[2];
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
