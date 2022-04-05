@@ -8,9 +8,23 @@ mod tests {
     fn format_str() {
         let to_format = fs::read_to_string("./test_resources/1_test.rs").unwrap();
         let answer = fs::read_to_string("./test_resources/1_answer.rs").unwrap();
-
         let formatted = strfmt::format_str(&to_format, "rs").unwrap();
+        assert_eq!(answer, formatted);
+    }
+    
+    #[test]
+    fn add_brackets() {
+        let to_format = fs::read_to_string("./test_resources/2_test.rs").unwrap();
+        let answer = fs::read_to_string("./test_resources/2_answer.rs").unwrap();
+        let formatted = strfmt::convert_to_brackets(&to_format, "rs").unwrap();
+        assert_eq!(answer, formatted);
+    }
 
+    #[test]
+    fn remove_brackets() {
+        let to_format = fs::read_to_string("./test_resources/3_test.rs").unwrap();
+        let answer = fs::read_to_string("./test_resources/3_answer.rs").unwrap();
+        let formatted = strfmt::convert_to_bracketless(&to_format, "rs").unwrap();
         assert_eq!(answer, formatted);
     }
 }
