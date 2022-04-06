@@ -211,7 +211,7 @@ pub mod strfmt {
                         break;
                     }
                 }
-
+    
                 // count_and_remove_begining_whitespace(line)
     
             //<> remove comment notation if it exists
@@ -250,8 +250,11 @@ pub mod strfmt {
                         whitespace_char,
                     );
     
-                    formatted_line =
-                        set_whitespace(line, comment_tracker[comment_tracker.len() - 1].depth, whitespace_char);
+                    formatted_line = set_whitespace(
+                        line,
+                        comment_tracker[comment_tracker.len() - 1].depth,
+                        whitespace_char,
+                    );
     
                     //> remove and add comment to comment tracker
                         let comment = CommentDetail {
@@ -273,8 +276,11 @@ pub mod strfmt {
                         whitespace_char,
                     );
     
-                    formatted_line =
-                        set_whitespace(line, comment_tracker[comment_tracker.len() - 1].depth, whitespace_char);
+                    formatted_line = set_whitespace(
+                        line,
+                        comment_tracker[comment_tracker.len() - 1].depth,
+                        whitespace_char,
+                    );
     
                     // remove comment from comment tracker
                     comment_tracker.pop();
@@ -442,7 +448,11 @@ pub mod strfmt {
         Some(String::from(first_half) + ">" + second_half)
     }
 
-    fn new_comment_closed_bracket(depth: usize, comment_starter: &str, whitespace_char: char) -> Option<String> {
+    fn new_comment_closed_bracket(
+        depth: usize,
+        comment_starter: &str,
+        whitespace_char: char,
+    ) -> Option<String> {
         let mut result = String::new();
         for _i in 0..depth {
             result.push(whitespace_char);
