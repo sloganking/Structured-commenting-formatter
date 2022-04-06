@@ -25,7 +25,6 @@ mod tests {
         let to_format = fs::read_to_string("./test_resources/3_test.rs").unwrap();
         let answer = fs::read_to_string("./test_resources/3_answer.rs").unwrap();
         let formatted = strfmt::convert_to_bracketless(&to_format, "rs").unwrap();
-        println!("{}", formatted);
         assert_eq!(answer, formatted);
     }
 }
