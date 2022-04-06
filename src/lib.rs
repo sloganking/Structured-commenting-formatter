@@ -73,7 +73,7 @@ pub mod strfmt {
         value + line
     }
 
-    fn set_whitespace(str: &str, depth: usize) -> String {
+    fn set_whitespace(str: &str, depth: usize, whitespace_char: char) -> String {
         let str_no_whitespace = match count_and_remove_begining_whitespace(str) {
             Some(x) => x.1,
             None => "".to_owned(),
@@ -82,7 +82,7 @@ pub mod strfmt {
         //> generate whitespace
             let mut whitespace = String::from("");
             for _i in 0..depth {
-                whitespace.push(' ');
+                whitespace.push(whitespace_char);
             }
         //<
 
@@ -211,6 +211,8 @@ pub mod strfmt {
                         break;
                     }
                 }
+
+                // count_and_remove_begining_whitespace(line)
     
             //<> remove comment notation if it exists
                 let comment_starter_with_space = comment_starter.to_owned() + " ";
@@ -249,7 +251,7 @@ pub mod strfmt {
                     );
     
                     formatted_line =
-                        set_whitespace(line, comment_tracker[comment_tracker.len() - 1].depth);
+                        set_whitespace(line, comment_tracker[comment_tracker.len() - 1].depth, whitespace_char);
     
                     //> remove and add comment to comment tracker
                         let comment = CommentDetail {
@@ -272,7 +274,7 @@ pub mod strfmt {
                     );
     
                     formatted_line =
-                        set_whitespace(line, comment_tracker[comment_tracker.len() - 1].depth);
+                        set_whitespace(line, comment_tracker[comment_tracker.len() - 1].depth, whitespace_char);
     
                     // remove comment from comment tracker
                     comment_tracker.pop();
@@ -440,10 +442,10 @@ pub mod strfmt {
         Some(String::from(first_half) + ">" + second_half)
     }
 
-    fn new_comment_closed_bracket(depth: usize, comment_starter: &str) -> Option<String> {
+    fn new_comment_closed_bracket(depth: usize, comment_starter: &str, whitespace_char: char) -> Option<String> {
         let mut result = String::new();
         for _i in 0..depth {
-            result.push(' ');
+            result.push(whitespace_char);
         }
 
         result.push_str(&(String::from(comment_starter) + "<"));
@@ -456,6 +458,7 @@ pub mod strfmt {
         cur_line: &mut usize,
         leading_spaces: usize,
         comment_starter: &str,
+        whitespace_char: char,
     ) {
         while !comment_tracker.is_empty()
             && leading_spaces <= comment_tracker[comment_tracker.len() - 1].depth
@@ -469,6 +472,7 @@ pub mod strfmt {
             let close_bracket_line = new_comment_closed_bracket(
                 comment_tracker[comment_tracker.len() - 1].depth,
                 comment_starter,
+                whitespace_char,
             )
             .unwrap();
             lines_list.push(close_bracket_line);
@@ -609,6 +613,8 @@ pub mod strfmt {
         // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
         let str = &convert_to_bracketless(str, filetype).unwrap();
 
+        let (whitespace_char, tab_spaces) = determine_whitespace_type(str);
+
         let mut comment_tracker: Vec<CommentDetail> = Vec::new();
 
         let mut lines_list: Vec<String> = Vec::new();
@@ -670,6 +676,7 @@ pub mod strfmt {
                                         &mut cur_line,
                                         x,
                                         comment_starter,
+                                        whitespace_char,
                                     );
 
                                     pass_a_new_comment_that_we_dont_know_if_its_structured(
@@ -697,6 +704,7 @@ pub mod strfmt {
                                     &mut cur_line,
                                     x,
                                     comment_starter,
+                                    whitespace_char,
                                 );
 
                                 pass_a_new_comment_that_we_dont_know_if_its_structured(
@@ -739,6 +747,7 @@ pub mod strfmt {
                                     &mut cur_line,
                                     x,
                                     comment_starter,
+                                    whitespace_char,
                                 );
                             }
                             unsure_if_last_comment_was_structured = false;
@@ -755,6 +764,7 @@ pub mod strfmt {
                                 &mut cur_line,
                                 x,
                                 comment_starter,
+                                whitespace_char,
                             );
 
                             //> forward the current line
@@ -785,6 +795,7 @@ pub mod strfmt {
             &mut cur_line,
             0,
             comment_starter,
+            whitespace_char,
         );
 
         let mut final_string = String::new();
