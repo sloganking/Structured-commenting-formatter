@@ -874,7 +874,7 @@ pub mod strfmt {
         //format str before removing brackets, to ensure their information is not lost.
         let str = &format_str(str, filetype)?;
 
-        let (whitespace_char, tab_spaces) = determine_whitespace_type(str);
+        let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
 
         let mut formatted_str = String::new();
 
