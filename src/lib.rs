@@ -623,7 +623,7 @@ pub mod strfmt {
         // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
         let str = &convert_to_bracketless(str, filetype).unwrap();
 
-        let (whitespace_char, tab_spaces) = determine_whitespace_type(str);
+        let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
 
         let mut comment_tracker: Vec<CommentDetail> = Vec::new();
 
