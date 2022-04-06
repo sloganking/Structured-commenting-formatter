@@ -141,6 +141,7 @@ pub mod strfmt {
         filetype_to_comment.insert("rs", "//");
         filetype_to_comment.insert("sh", "#");
         filetype_to_comment.insert("sol", "//");
+        filetype_to_comment.insert("toml", "#");
         //> TypeScript
             filetype_to_comment.insert("ts", "//");
             filetype_to_comment.insert("tsx", "//");
