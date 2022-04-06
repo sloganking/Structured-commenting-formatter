@@ -38,27 +38,30 @@ pub mod strfmt {
     use std::io::Write;
     use std::path::PathBuf;
 
-    // fn determine_whitespace_type(str: &str) -> (char,u32) {
+    fn determine_whitespace_type(str: &str) -> (char, u32) {
+        //> if no whitespace is found, assume format is 4 spaces
+            let mut chr = ' ';
+            let mut num = 4;
+        //<
 
-    //     let mut chr = ' ';
-    //     let mut num = 4;
+        for line in str.lines() {
+            if let Some(first_char) = line.chars().nth(0) {
+                if first_char == ' ' {
+                    if let Some(whitespace) = count_and_remove_begining_spaces(line) {
+                        chr = ' ';
+                        num = whitespace.0;
+                        break;
+                    }
+                } else if first_char == '\t' {
+                    chr = '\t';
+                    num = 1;
+                    break;
+                }
+            }
+        }
 
-    //     for line in str.lines(){
-    //         match line.chars().nth(0){
-    //             Some(x) => match x {
-    //                 ' ' => {
-    //                     num = 1;
-    //                     for
-    //                 },
-    //                 '\t' => ,
-    //                 _ => ,
-    //             },
-    //             None => continue,
-    //         }
-    //     }
-
-    //     ('a',0)
-    // }
+        (chr, num.try_into().unwrap())
+    }
 
     fn add_whitespace(line: &str, tab_depth: u32, tab_spaces: u32) -> String {
         let mut value = String::from("");
