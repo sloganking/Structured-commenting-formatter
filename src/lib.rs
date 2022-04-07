@@ -27,6 +27,13 @@ mod tests {
         let formatted = strfmt::convert_to_bracketless(&to_format, "rs").unwrap();
         assert_eq!(answer, formatted);
     }
+
+    #[test]
+    fn no_change_without_brackets() {
+        let before_formatting = fs::read_to_string("./test_resources/4_test.rs").unwrap();
+        let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
+        assert_eq!(formatted, before_formatting);
+    }
 }
 
 pub mod strfmt {
