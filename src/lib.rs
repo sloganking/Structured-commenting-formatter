@@ -15,7 +15,7 @@ mod tests {
     fn add_brackets() {
         let to_format = fs::read_to_string("./test_resources/2_test.rs").unwrap();
         let answer = fs::read_to_string("./test_resources/2_answer.rs").unwrap();
-        let formatted = strfmt::convert_to_brackets(&to_format, "rs").unwrap();
+        let formatted = strfmt::add_brackets(&to_format, "rs").unwrap();
         assert_eq!(answer, formatted);
     }
 
@@ -23,7 +23,7 @@ mod tests {
     fn remove_brackets() {
         let to_format = fs::read_to_string("./test_resources/3_test.rs").unwrap();
         let answer = fs::read_to_string("./test_resources/3_answer.rs").unwrap();
-        let formatted = strfmt::convert_to_bracketless(&to_format, "rs").unwrap();
+        let formatted = strfmt::remove_brackets(&to_format, "rs").unwrap();
         assert_eq!(answer, formatted);
     }
 
@@ -387,7 +387,7 @@ pub mod strfmt {
         true
     }
 
-    pub fn convert_to_brackets_file(file: PathBuf) -> bool {
+    pub fn add_brackets_file(file: PathBuf) -> bool {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
@@ -401,7 +401,7 @@ pub mod strfmt {
             Err(_) => return false,
         };
 
-        let converted = match convert_to_brackets(&contents, extenstion) {
+        let converted = match add_brackets(&contents, extenstion) {
             Ok(x) => x,
             Err(err) => {
                 display_err(err, file);
@@ -635,7 +635,7 @@ pub mod strfmt {
         true
     }
 
-    pub fn convert_to_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
+    pub fn add_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
         let comment_starter = match gen_compatable_file_table().get(filetype) {
             Some(x) => *x,
@@ -643,7 +643,7 @@ pub mod strfmt {
         };
 
         // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
-        let str = &convert_to_bracketless(str, filetype)?;
+        let str = &remove_brackets(str, filetype)?;
 
         let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
 
@@ -824,7 +824,7 @@ pub mod strfmt {
         Ok(final_string)
     }
 
-    pub fn convert_to_bracketless_file(file: PathBuf) -> bool {
+    pub fn remove_brackets_file(file: PathBuf) -> bool {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
@@ -838,7 +838,7 @@ pub mod strfmt {
             Err(_) => return false,
         };
 
-        let converted = match convert_to_bracketless(&contents, extenstion) {
+        let converted = match remove_brackets(&contents, extenstion) {
             Ok(x) => x,
             Err(err) => {
                 display_err(err, file);
@@ -889,7 +889,7 @@ pub mod strfmt {
         }
     }
 
-    pub fn convert_to_bracketless(str: &str, filetype: &str) -> Result<String, (usize, String)> {
+    pub fn remove_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
         let comment_starter = match gen_compatable_file_table().get(filetype) {
             Some(x) => *x,

@@ -31,10 +31,10 @@ fn main() {
             if path.is_dir() {
                 let paths = strfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    strfmt::convert_to_brackets_file(file);
+                    strfmt::add_brackets_file(file);
                 }
             } else if path.is_file() {
-                strfmt::convert_to_brackets_file(path);
+                strfmt::add_brackets_file(path);
             } else {
                 panic!("second arg must be a path or file");
             }
@@ -45,10 +45,10 @@ fn main() {
             if path.is_dir() {
                 let paths = strfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    strfmt::convert_to_bracketless_file(file);
+                    strfmt::remove_brackets_file(file);
                 }
             } else if path.is_file() {
-                strfmt::convert_to_bracketless_file(path);
+                strfmt::remove_brackets_file(path);
             } else {
                 panic!("second arg must be a path or file");
             }
