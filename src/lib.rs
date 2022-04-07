@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use std::fs;
-
     use crate::strfmt;
+    use std::fs;
 
     #[test]
     fn format_str() {
@@ -183,11 +182,8 @@ pub mod strfmt {
                     - lowest_depth;
                 if depth_difference > 0 {
                     for i in line_of_last_unclosed_comment + 1..formatted_lines.len() {
-                        formatted_lines[i] = add_whitespace(
-                            &formatted_lines[i],
-                            depth_difference,
-                            whitespace_char,
-                        )
+                        formatted_lines[i] =
+                            add_whitespace(&formatted_lines[i], depth_difference, whitespace_char)
                     }
                 }
             }
@@ -527,13 +523,8 @@ pub mod strfmt {
             }
         //<
 
-        
-
         match leading_whitespace_option {
-            Some(num_leading_whitespace) => Some((
-                num_leading_whitespace,
-                line_no_leading_spaces,
-            )),
+            Some(num_leading_whitespace) => Some((num_leading_whitespace, line_no_leading_spaces)),
             None => None,
         }
     }
