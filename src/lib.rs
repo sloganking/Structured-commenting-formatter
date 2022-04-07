@@ -271,10 +271,7 @@ pub mod strfmt {
                     //<
                 } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
                     if comment_tracker.is_empty() {
-                        return Err((
-                            i + 1,
-                            "<> closed nothing".to_owned(),
-                        ));
+                        return Err((i + 1, "<> closed nothing".to_owned()));
                     }
     
                     ensure_previous_lines_have_correct_whitespace(
@@ -300,10 +297,7 @@ pub mod strfmt {
                     //<
                 } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
                     if comment_tracker.is_empty() {
-                        return Err((
-                            i + 1,
-                            "< closed nothing".to_owned(),
-                        ));
+                        return Err((i + 1, "< closed nothing".to_owned()));
                     }
     
                     ensure_previous_lines_have_correct_whitespace(
