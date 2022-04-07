@@ -54,6 +54,29 @@ mod tests {
         let formatted = strfmt::format_str(&before_formatting, "rs");
         assert_eq!(formatted, Err((1, "unclosed comment".to_owned())));
     }
+
+    //> operations leave one empty line at end of string
+        #[test]
+        fn format_leaves_last_line_empty() {
+            let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
+            let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
+            assert_eq!(formatted, "//>\n//<\n");
+        }
+    
+        #[test]
+        fn add_brackets_leaves_last_line_empty() {
+            let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
+            let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
+            assert_eq!(formatted, "//>\n//<\n");
+        }
+    
+        #[test]
+        fn remove_brackets_leaves_last_line_empty() {
+            let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
+            let formatted = strfmt::remove_brackets(&before_formatting, "rs").unwrap();
+            assert_eq!(formatted, "//\n");
+        }
+    //<
 }
 
 pub mod strfmt {
@@ -118,7 +141,7 @@ pub mod strfmt {
     }
 
     pub fn get_files_in_dir(path: &str, filetype: &str) -> Vec<PathBuf> {
-        //> get list of all files and dirs in ./input/ using glob
+        //> get list of all files and dirs in path, using glob
             let mut paths = Vec::new();
     
             let mut potential_slash = "";
@@ -212,6 +235,20 @@ pub mod strfmt {
         //<
     }
 
+    fn chop_off_beginning_spaces(line: &str) -> (Option<usize>, &str) {
+        let mut line_no_leading_spaces = "";
+        let mut leading_spaces: Option<usize> = None;
+        for (i, char) in line.chars().enumerate() {
+            if char as u32 > 32 {
+                line_no_leading_spaces = &line[i..];
+                leading_spaces = Some(i);
+                break;
+            }
+        }
+
+        (leading_spaces, line_no_leading_spaces)
+    }
+
     fn remove_comment_notation_if_it_exists(line: &str, comment_starter: &str) -> (bool, String) {
         let mut line_no_comment_starter = line;
         let comment_starter_with_space = comment_starter.to_owned() + " ";
@@ -240,17 +277,8 @@ pub mod strfmt {
         let mut comment_tracker: Vec<CommentDetail> = Vec::new();
 
         for (i, line) in str.lines().enumerate() {
-            //> chop off begining spaces
-                let mut line_no_leading_spaces = "";
-                let mut leading_spaces: Option<usize> = None;
-                for (i, char) in line.chars().enumerate() {
-                    if char as u32 > 32 {
-                        line_no_leading_spaces = &line[i..];
-                        leading_spaces = Some(i);
-                        break;
-                    }
-                }
-            //<
+            // chop off begining spaces
+            let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
             // remove comment notation if it exists
             let (is_a_comment, line_no_leading_spaces) =
@@ -322,14 +350,13 @@ pub mod strfmt {
             formatted_lines.push(formatted_line + "\n");
         }
 
+        remove_empty_tail(&mut formatted_lines);
+
         //> turn all lines into one string
             for line in formatted_lines {
                 formatted_file.push_str(&line);
             }
         //<
-
-        // remove last \n
-        formatted_file.pop();
 
         //> ensure formatting successful
             if !comment_tracker.is_empty() {
@@ -429,19 +456,8 @@ pub mod strfmt {
         depth: usize,
     }
 
-    fn make_comment_closed_and_open_bracket(str: &str, comment_starter: &str) -> Option<String> {
-        //> chop off begining spaces
-            let mut line_no_leading_spaces = "";
-            let mut leading_spaces: Option<usize> = None;
-            let char_vec: Vec<char> = str.chars().collect();
-            for (i, char) in char_vec.iter().enumerate() {
-                if *char as u32 > 32 {
-                    line_no_leading_spaces = &str[i..];
-                    leading_spaces = Some(i);
-                    break;
-                }
-            }
-        //<
+    fn make_comment_closed_and_open_bracket(line: &str, comment_starter: &str) -> Option<String> {
+        let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
         // remove comment notation if it exists
         let (is_a_comment, _line_no_comment_starter) =
@@ -451,25 +467,15 @@ pub mod strfmt {
             return None;
         }
 
-        let first_half = &str[..leading_spaces.unwrap() + comment_starter.len()];
-        let second_half = &str[leading_spaces.unwrap() + comment_starter.len()..];
+        let first_half = &line[..leading_spaces.unwrap() + comment_starter.len()];
+        let second_half = &line[leading_spaces.unwrap() + comment_starter.len()..];
 
         Some(String::from(first_half) + "<>" + second_half)
     }
 
-    fn make_comment_open_bracket(str: &str, comment_starter: &str) -> Option<String> {
-        //> chop off begining spaces
-            let mut line_no_leading_spaces = "";
-            let mut leading_spaces: Option<usize> = None;
-            let char_vec: Vec<char> = str.chars().collect();
-            for (i, char) in char_vec.iter().enumerate() {
-                if *char as u32 > 32 {
-                    line_no_leading_spaces = &str[i..];
-                    leading_spaces = Some(i);
-                    break;
-                }
-            }
-        //<
+    fn make_comment_open_bracket(line: &str, comment_starter: &str) -> Option<String> {
+        // chop off begining spaces
+        let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
         // remove comment notation if it exists
         let (is_a_comment, _line_no_comment_starter) =
@@ -479,8 +485,8 @@ pub mod strfmt {
             return None;
         }
 
-        let first_half = &str[..leading_spaces.unwrap() + comment_starter.len()];
-        let second_half = &str[leading_spaces.unwrap() + comment_starter.len()..];
+        let first_half = &line[..leading_spaces.unwrap() + comment_starter.len()];
+        let second_half = &line[leading_spaces.unwrap() + comment_starter.len()..];
 
         Some(String::from(first_half) + ">" + second_half)
     }
@@ -499,6 +505,12 @@ pub mod strfmt {
         Some(result)
     }
 
+    fn remove_empty_tail(lines_list: &mut Vec<String>) {
+        while !lines_list.is_empty() && line_is_only_whitepace(lines_list.last().unwrap()) {
+            lines_list.pop();
+        }
+    }
+
     fn end_the_last_structured_comments(
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
@@ -509,11 +521,9 @@ pub mod strfmt {
         while !comment_tracker.is_empty()
             && leading_spaces <= comment_tracker[comment_tracker.len() - 1].depth
         {
-            //> remove above whitespace
-                while !lines_list.is_empty() && line_is_only_whitepace(lines_list.last().unwrap()) {
-                    lines_list.pop();
-                }
-            //<
+            // remove above whitespace
+            remove_empty_tail(lines_list);
+
             let close_bracket_line = new_comment_closed_bracket(
                 comment_tracker[comment_tracker.len() - 1].depth,
                 comment_starter,
@@ -544,21 +554,13 @@ pub mod strfmt {
     }
 
     fn count_and_remove_begining_whitespace(line: &str) -> Option<(usize, String)> {
-        //> chop off begining spaces
-            let mut line_no_leading_spaces = String::from("");
-            let mut leading_whitespace_option: Option<usize> = None;
-            let char_vec: Vec<char> = line.chars().collect();
-            for (i, char) in char_vec.iter().enumerate() {
-                if *char as u32 > 32 {
-                    line_no_leading_spaces = (&line[i..]).to_owned();
-                    leading_whitespace_option = Some(i);
-                    break;
-                }
-            }
-        //<
+        // chop off begining spaces
+        let (leading_whitespace_option, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
         match leading_whitespace_option {
-            Some(num_leading_whitespace) => Some((num_leading_whitespace, line_no_leading_spaces)),
+            Some(num_leading_whitespace) => {
+                Some((num_leading_whitespace, line_no_leading_spaces.to_owned()))
+            }
             None => None,
         }
     }
@@ -578,18 +580,9 @@ pub mod strfmt {
             if line_of_latest_comment > 0 {
                 let line_before_open_bracket_comment = &lines_list[line_of_latest_comment - 1];
     
-                //> chop off begining spaces
-                    let mut line_no_leading_spaces = "";
-                    let mut leading_spaces: Option<usize> = None;
-                    let char_vec: Vec<char> = line_before_open_bracket_comment.chars().collect();
-                    for (i, char) in char_vec.iter().enumerate() {
-                        if *char as u32 > 32 {
-                            line_no_leading_spaces = &line_before_open_bracket_comment[i..];
-                            leading_spaces = Some(i);
-                            break;
-                        }
-                    }
-                //<
+                // chop off begining spaces
+                let (leading_spaces, line_no_leading_spaces) =
+                    chop_off_beginning_spaces(line_before_open_bracket_comment);
     
                 // remove comment notation if it exists
                 let (is_a_comment, line_no_comment_opener) =
@@ -653,19 +646,10 @@ pub mod strfmt {
         let mut unsure_if_last_comment_was_structured = true;
 
         for line in str.lines() {
-            //> chop off begining spaces
-                let mut line_no_leading_spaces = "";
-                let mut leading_spaces: Option<usize> = None;
-                let char_vec: Vec<char> = line.chars().collect();
-                for (i, char) in char_vec.iter().enumerate() {
-                    if *char as u32 > 32 {
-                        line_no_leading_spaces = &line[i..];
-                        leading_spaces = Some(i);
-                        break;
-                    }
-                }
-    
-            //<> determine if line is a comment
+            // chop off begining spaces
+            let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
+
+            //> determine if line is a comment
                 let comment_starter_with_space = comment_starter.to_owned() + " ";
                 let mut is_a_comment = false;
                 if line_no_leading_spaces.starts_with(&comment_starter_with_space)
@@ -813,13 +797,15 @@ pub mod strfmt {
             whitespace_char,
         );
 
-        let mut final_string = String::new();
-        for line in lines_list {
-            final_string.push_str(&line);
-            final_string.push('\n');
-        }
-        // remove last \n
-        final_string.pop();
+        remove_empty_tail(&mut lines_list);
+
+        //> turn all lines into one string
+            let mut final_string = String::new();
+            for line in lines_list {
+                final_string.push_str(&line);
+                final_string.push('\n');
+            }
+        //<
 
         Ok(final_string)
     }
@@ -896,6 +882,8 @@ pub mod strfmt {
             None => return Err((0, "Incompatible file type".to_owned())),
         };
 
+        let mut lines_list: Vec<String> = Vec::new();
+
         //format str before removing brackets, to ensure their information is not lost.
         let str = &format_str(str, filetype)?;
 
@@ -916,37 +904,42 @@ pub mod strfmt {
                         remove_comment_starter(line_no_leading_whitespace, comment_starter);
 
                     if line_no_comment_starter.starts_with("<>") {
-                        formatted_str.push_str(
-                            &(add_whitespace(
+                        lines_list.push(
+                            add_whitespace(
                                 &(comment_starter.to_owned() + &line_no_comment_starter[2..]),
                                 leading_whitespace,
                                 whitespace_char,
-                            ) + "\n"),
+                            ) + "\n",
                         );
                     } else if line_no_comment_starter.starts_with('>') {
-                        formatted_str.push_str(
-                            &(add_whitespace(
+                        lines_list.push(
+                            add_whitespace(
                                 &(comment_starter.to_owned() + &line_no_comment_starter[1..]),
                                 leading_whitespace,
                                 whitespace_char,
-                            ) + "\n"),
+                            ) + "\n",
                         );
                     } else if line_no_comment_starter.starts_with('<') {
                         // remove line by not adding it to output
                         continue;
                     } else {
-                        formatted_str.push_str(&(line.to_owned() + "\n"));
+                        lines_list.push(line.to_owned() + "\n");
                     }
                 } else {
-                    formatted_str.push_str(&(line.to_owned() + "\n"));
+                    lines_list.push(line.to_owned() + "\n");
                 }
             } else {
-                formatted_str.push_str(&(line.to_owned() + "\n"));
+                lines_list.push(line.to_owned() + "\n");
             }
         }
 
-        // remove last '\n'
-        formatted_str.pop();
+        remove_empty_tail(&mut lines_list);
+
+        //> turn all lines into one string
+            for line in lines_list {
+                formatted_str.push_str(&line);
+            }
+        //<
 
         Ok(formatted_str)
     }
