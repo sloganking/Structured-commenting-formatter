@@ -37,13 +37,13 @@ mod tests {
 
 pub mod strfmt {
 
+    use colored::*;
     use glob::glob;
     use std::collections::HashMap;
     use std::fs;
     use std::fs::File;
     use std::io::Write;
     use std::path::PathBuf;
-    use colored::*;
 
     fn determine_whitespace_type(str: &str) -> (char, usize) {
         //> if no whitespace is found, assume format is 4 spaces
@@ -191,9 +191,9 @@ pub mod strfmt {
         //<
     }
 
-    pub fn format_str(str: &str, filetype: &str) -> Result<String,(usize, String)> {
+    pub fn format_str(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
-        let comment_starter = match gen_compatable_file_table().get(filetype){
+        let comment_starter = match gen_compatable_file_table().get(filetype) {
             Some(x) => *x,
             None => return Err((0, "Incompatible file type".to_owned())),
         };
@@ -243,7 +243,10 @@ pub mod strfmt {
                     //<
                 } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
                     if comment_tracker.is_empty() {
-                        return Err((i + 1, "<> closed nothing at line:".to_owned() + &format!("{}", i + 1)))
+                        return Err((
+                            i + 1,
+                            "<> closed nothing at line:".to_owned() + &format!("{}", i + 1),
+                        ));
                     }
     
                     ensure_previous_lines_have_correct_whitespace(
@@ -269,7 +272,10 @@ pub mod strfmt {
                     //<
                 } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
                     if comment_tracker.is_empty() {
-                        return Err((i + 1, "< closed nothing at line:".to_owned() + &format!("{}", i + 1)))
+                        return Err((
+                            i + 1,
+                            "< closed nothing at line:".to_owned() + &format!("{}", i + 1),
+                        ));
                     }
     
                     ensure_previous_lines_have_correct_whitespace(
@@ -306,10 +312,20 @@ pub mod strfmt {
         //> ensure formatting successful
             if !comment_tracker.is_empty() {
                 let err_line = comment_tracker[comment_tracker.len() - 1].line + 1;
-                return Err((err_line, "unclosed comment".to_owned()))
+                return Err((err_line, "unclosed comment".to_owned()));
             }
         //<
         Ok(formatted_file)
+    }
+
+    fn display_err(err: (usize, String), file: PathBuf) {
+        if err.1 != "Incompatible file type" {
+            println!("{}: {}", "Error".red().bold(), err.1);
+            println!(
+                "{}",
+                file.as_os_str().to_str().unwrap().to_owned() + ":" + &format!("{}", err.0)
+            );
+        }
     }
 
     pub fn format_file(file: PathBuf) -> bool {
@@ -328,13 +344,10 @@ pub mod strfmt {
 
         let formatted = match format_str(&contents, extenstion) {
             Ok(x) => x,
-            Err((line, err_msg)) => {
-
-                println!("{}: {}", "Error".red().bold(), err_msg);
-                println!("{}", file.as_os_str().to_str().unwrap().to_owned() + ":" + &format!("{}",line));
-                
-                return false
-            },
+            Err(err) => {
+                display_err(err, file);
+                return false;
+            }
         };
 
         //> write file
@@ -367,8 +380,11 @@ pub mod strfmt {
         };
 
         let converted = match convert_to_brackets(&contents, extenstion) {
-            Some(x) => x,
-            None => return false,
+            Ok(x) => x,
+            Err(err) => {
+                display_err(err, file);
+                return false;
+            }
         };
 
         //> write file
@@ -612,12 +628,15 @@ pub mod strfmt {
         true
     }
 
-    pub fn convert_to_brackets(str: &str, filetype: &str) -> Option<String> {
+    pub fn convert_to_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
-        let comment_starter = *gen_compatable_file_table().get(filetype)?;
+        let comment_starter = match gen_compatable_file_table().get(filetype) {
+            Some(x) => *x,
+            None => return Err((0, "Incompatible file type".to_owned())),
+        };
 
         // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
-        let str = &convert_to_bracketless(str, filetype).unwrap();
+        let str = &convert_to_bracketless(str, filetype)?;
 
         let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
 
@@ -795,7 +814,7 @@ pub mod strfmt {
         // remove last \n
         final_string.pop();
 
-        Some(final_string)
+        Ok(final_string)
     }
 
     pub fn convert_to_bracketless_file(file: PathBuf) -> bool {
@@ -813,8 +832,11 @@ pub mod strfmt {
         };
 
         let converted = match convert_to_bracketless(&contents, extenstion) {
-            Some(x) => x,
-            None => return false,
+            Ok(x) => x,
+            Err(err) => {
+                display_err(err, file);
+                return false;
+            }
         };
 
         //> write file
@@ -860,19 +882,15 @@ pub mod strfmt {
         }
     }
 
-    pub fn convert_to_bracketless(str: &str, filetype: &str) -> Option<String> {
+    pub fn convert_to_bracketless(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
-        let comment_starter = *gen_compatable_file_table().get(filetype)?;
+        let comment_starter = match gen_compatable_file_table().get(filetype) {
+            Some(x) => *x,
+            None => return Err((0, "Incompatible file type".to_owned())),
+        };
 
         //format str before removing brackets, to ensure their information is not lost.
-        let str = &match format_str(str, filetype){
-            Ok(x) => x,
-            Err((line, err_msg)) => {
-                println!("{}: {}", "Error".red().bold(), err_msg);
-                println!("line: {}",line);
-                panic!();
-            },
-        };
+        let str = &format_str(str, filetype)?;
 
         let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
 
@@ -923,6 +941,6 @@ pub mod strfmt {
         // remove last '\n'
         formatted_str.pop();
 
-        Some(formatted_str)
+        Ok(formatted_str)
     }
 }
