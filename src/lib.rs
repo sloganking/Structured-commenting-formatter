@@ -45,7 +45,7 @@ pub mod strfmt {
         //<
 
         for line in str.lines() {
-            if let Some(first_char) = line.chars().nth(0) {
+            if let Some(first_char) = line.chars().next() {
                 if first_char == ' ' {
                     if let Some(whitespace) = count_and_remove_begining_whitespace(line) {
                         chr = ' ';
@@ -60,7 +60,7 @@ pub mod strfmt {
             }
         }
 
-        (chr, num.try_into().unwrap())
+        (chr, num)
     }
 
     fn add_whitespace(line: &str, depth: usize, whitespace_char: char) -> String {
@@ -178,7 +178,7 @@ pub mod strfmt {
                     for i in line_of_last_unclosed_comment + 1..formatted_lines.len() {
                         formatted_lines[i] = add_whitespace(
                             &formatted_lines[i],
-                            depth_difference.try_into().unwrap(),
+                            depth_difference,
                             whitespace_char,
                         )
                     }
@@ -239,7 +239,7 @@ pub mod strfmt {
                         comment_tracker.push(comment);
                     //<
                 } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
-                    if comment_tracker.len() == 0 {
+                    if comment_tracker.is_empty() {
                         panic!("<> closed nothing at line: {}", i + 1)
                     }
     
@@ -519,9 +519,12 @@ pub mod strfmt {
                 }
             }
         //<
+
+        
+
         match leading_whitespace_option {
             Some(num_leading_whitespace) => Some((
-                num_leading_whitespace.try_into().unwrap(),
+                num_leading_whitespace,
                 line_no_leading_spaces,
             )),
             None => None,
@@ -831,14 +834,12 @@ pub mod strfmt {
                 let str = x.1;
 
                 if str.starts_with(&comment_starter_with_space) {
-                    return true;
-                } else if str.starts_with(comment_starter) {
-                    return true;
+                    true
                 } else {
-                    return false;
+                    str.starts_with(comment_starter)
                 }
             }
-            None => return false,
+            None => false,
         }
     }
 
@@ -855,9 +856,9 @@ pub mod strfmt {
                     line_no_comment_starter = &str[comment_starter.len()..];
                 }
 
-                return line_no_comment_starter.to_string();
+                line_no_comment_starter.to_string()
             }
-            None => return str.to_owned(),
+            None => str.to_owned(),
         }
     }
 
