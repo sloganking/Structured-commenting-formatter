@@ -33,6 +33,27 @@ mod tests {
         let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
         assert_eq!(formatted, before_formatting);
     }
+
+    #[test]
+    fn no_head_for_closing() {
+        let before_formatting = fs::read_to_string("./test_resources/5_test.rs").unwrap();
+        let formatted = strfmt::format_str(&before_formatting, "rs");
+        assert_eq!(formatted, Err((46, "< closed nothing".to_owned())));
+    }
+
+    #[test]
+    fn no_head_for_middle() {
+        let before_formatting = fs::read_to_string("./test_resources/6_test.rs").unwrap();
+        let formatted = strfmt::format_str(&before_formatting, "rs");
+        assert_eq!(formatted, Err((21, "<> closed nothing".to_owned())));
+    }
+
+    #[test]
+    fn head_never_closed() {
+        let before_formatting = fs::read_to_string("./test_resources/7_test.rs").unwrap();
+        let formatted = strfmt::format_str(&before_formatting, "rs");
+        assert_eq!(formatted, Err((1, "unclosed comment".to_owned())));
+    }
 }
 
 pub mod strfmt {
@@ -252,7 +273,7 @@ pub mod strfmt {
                     if comment_tracker.is_empty() {
                         return Err((
                             i + 1,
-                            "<> closed nothing at line:".to_owned() + &format!("{}", i + 1),
+                            "<> closed nothing".to_owned(),
                         ));
                     }
     
@@ -281,7 +302,7 @@ pub mod strfmt {
                     if comment_tracker.is_empty() {
                         return Err((
                             i + 1,
-                            "< closed nothing at line:".to_owned() + &format!("{}", i + 1),
+                            "< closed nothing".to_owned(),
                         ));
                     }
     
