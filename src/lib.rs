@@ -62,14 +62,14 @@ mod tests {
             let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
             assert_eq!(formatted, "//>\n//<\n");
         }
-    
+
         #[test]
         fn add_brackets_leaves_last_line_empty() {
             let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
             let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
             assert_eq!(formatted, "//>\n//<\n");
         }
-    
+
         #[test]
         fn remove_brackets_leaves_last_line_empty() {
             let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
@@ -143,14 +143,14 @@ pub mod strfmt {
     pub fn get_files_in_dir(path: &str, filetype: &str) -> Vec<PathBuf> {
         //> get list of all files and dirs in path, using glob
             let mut paths = Vec::new();
-    
+
             let mut potential_slash = "";
             if PathBuf::from(path).is_dir() && !path.ends_with('/') {
                 potential_slash = "/";
             }
-    
+
             let search_params = String::from(path) + potential_slash + "**/*" + filetype;
-    
+
             for entry in glob(&search_params).expect("Failed to read glob pattern") {
                 match entry {
                     Ok(path) => {
@@ -159,10 +159,10 @@ pub mod strfmt {
                     Err(e) => println!("{:?}", e),
                 }
             }
-    
+
         //<> filter out directories
             let paths = paths.into_iter().filter(|e| e.is_file());
-    
+
         //<> filter out non unicode files
             let paths: Vec<PathBuf> = paths
                 .into_iter()
@@ -293,10 +293,10 @@ pub mod strfmt {
 
             //> apply whitespace depth
                 let formatted_line;
-    
+
                 if is_a_comment & line_no_leading_spaces.starts_with('>') {
                     formatted_line = line.to_string();
-    
+
                     //> add comment to comment tracker
                         let comment = CommentDetail {
                             line: i,
@@ -308,20 +308,20 @@ pub mod strfmt {
                     if comment_tracker.is_empty() {
                         return Err((i + 1, "<> closed nothing".to_owned()));
                     }
-    
+
                     ensure_previous_lines_have_correct_whitespace(
                         &mut formatted_lines,
                         &mut comment_tracker,
                         tab_spaces,
                         whitespace_char,
                     );
-    
+
                     formatted_line = set_whitespace(
                         line,
                         comment_tracker[comment_tracker.len() - 1].depth,
                         whitespace_char,
                     );
-    
+
                     //> remove and add comment to comment tracker
                         let comment = CommentDetail {
                             line: i,
@@ -334,20 +334,20 @@ pub mod strfmt {
                     if comment_tracker.is_empty() {
                         return Err((i + 1, "< closed nothing".to_owned()));
                     }
-    
+
                     ensure_previous_lines_have_correct_whitespace(
                         &mut formatted_lines,
                         &mut comment_tracker,
                         tab_spaces,
                         whitespace_char,
                     );
-    
+
                     formatted_line = set_whitespace(
                         line,
                         comment_tracker[comment_tracker.len() - 1].depth,
                         whitespace_char,
                     );
-    
+
                     // remove comment from comment tracker
                     comment_tracker.pop();
                 } else {
@@ -411,7 +411,7 @@ pub mod strfmt {
                 Ok(x) => x,
                 Err(_) => return false,
             };
-    
+
             match write!(output, "{}", formatted) {
                 Ok(x) => x,
                 Err(_) => return false,
@@ -448,7 +448,7 @@ pub mod strfmt {
                 Ok(x) => x,
                 Err(_) => return false,
             };
-    
+
             match write!(output, "{}", converted) {
                 Ok(x) => x,
                 Err(_) => return false,
@@ -580,27 +580,27 @@ pub mod strfmt {
         let mut should_consume_closing_comment = false;
 
         //> consume any previous now unecessary //<
-    
+
             let line_of_latest_comment = comment_tracker[comment_tracker.len() - 1].line;
-    
+
             // if there even could be a //< comment behind the lastest comment
             if line_of_latest_comment > 0 {
                 let line_before_open_bracket_comment = &lines_list[line_of_latest_comment - 1];
-    
+
                 // chop off begining spaces
                 let (leading_spaces, line_no_leading_spaces) =
                     chop_off_beginning_spaces(line_before_open_bracket_comment);
-    
+
                 // remove comment notation if it exists
                 let (is_a_comment, line_no_comment_opener) =
                     remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
-    
+
                 let latest_comment =
                     match count_and_remove_begining_whitespace(&lines_list[line_of_latest_comment]) {
                         Some(x) => x,
                         None => (0, String::from("")),
                     };
-    
+
                 if is_a_comment
                     && line_no_comment_opener.starts_with('<')
                     && latest_comment.0 == leading_spaces.unwrap()
