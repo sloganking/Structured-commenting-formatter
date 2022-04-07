@@ -191,6 +191,21 @@ pub mod strfmt {
         //<
     }
 
+    fn remove_comment_notation_if_it_exists(line: &str, comment_starter: &str) -> (bool, String) {
+        let mut line_no_comment_starter = line;
+        let comment_starter_with_space = comment_starter.to_owned() + " ";
+        let mut is_a_comment = false;
+        if line_no_comment_starter.starts_with(&comment_starter_with_space) {
+            is_a_comment = true;
+            line_no_comment_starter = &line_no_comment_starter[comment_starter.len() + 1..];
+        } else if line_no_comment_starter.starts_with(comment_starter) {
+            is_a_comment = true;
+            line_no_comment_starter = &line_no_comment_starter[comment_starter.len()..];
+        }
+
+        (is_a_comment, line_no_comment_starter.to_owned())
+    }
+
     pub fn format_str(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
         let comment_starter = match gen_compatable_file_table().get(filetype) {
@@ -214,21 +229,13 @@ pub mod strfmt {
                         break;
                     }
                 }
-    
-                // count_and_remove_begining_whitespace(line)
-    
-            //<> remove comment notation if it exists
-                let comment_starter_with_space = comment_starter.to_owned() + " ";
-                let mut is_a_comment = false;
-                if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
-                    is_a_comment = true;
-                    line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len() + 1..];
-                } else if line_no_leading_spaces.starts_with(comment_starter) {
-                    is_a_comment = true;
-                    line_no_leading_spaces = &line_no_leading_spaces[comment_starter.len()..];
-                }
-    
-            //<> apply whitespace depth
+            //<
+
+            // remove comment notation if it exists
+            let (is_a_comment, line_no_leading_spaces) =
+                remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
+
+            //> apply whitespace depth
                 let formatted_line;
     
                 if is_a_comment & line_no_leading_spaces.starts_with('>') {
@@ -419,16 +426,12 @@ pub mod strfmt {
                     break;
                 }
             }
-    
-        //<> remove comment notation if it exists
-            let comment_starter_with_space = comment_starter.to_owned() + " ";
-            let mut is_a_comment = false;
-            if line_no_leading_spaces.starts_with(&comment_starter_with_space)
-                || line_no_leading_spaces.starts_with(comment_starter)
-            {
-                is_a_comment = true;
-            }
         //<
+
+        // remove comment notation if it exists
+        let (is_a_comment, _line_no_comment_starter) =
+            remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
+
         if !is_a_comment {
             return None;
         }
@@ -451,16 +454,12 @@ pub mod strfmt {
                     break;
                 }
             }
-    
-        //<> remove comment notation if it exists
-            let comment_starter_with_space = comment_starter.to_owned() + " ";
-            let mut is_a_comment = false;
-            if line_no_leading_spaces.starts_with(&comment_starter_with_space)
-                || line_no_leading_spaces.starts_with(comment_starter)
-            {
-                is_a_comment = true;
-            }
         //<
+
+        // remove comment notation if it exists
+        let (is_a_comment, _line_no_comment_starter) =
+            remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
+
         if !is_a_comment {
             return None;
         }
@@ -575,19 +574,12 @@ pub mod strfmt {
                             break;
                         }
                     }
-        
-                //<> remove comment notation if it exists
-                    let comment_starter_with_space = comment_starter.to_owned() + " ";
-                    let mut is_a_comment = false;
-                    let mut line_no_comment_opener = "";
-                    if line_no_leading_spaces.starts_with(&comment_starter_with_space) {
-                        is_a_comment = true;
-                        line_no_comment_opener = &line_no_leading_spaces[comment_starter.len() + 1..];
-                    } else if line_no_leading_spaces.starts_with(comment_starter) {
-                        is_a_comment = true;
-                        line_no_comment_opener = &line_no_leading_spaces[comment_starter.len()..];
-                    }
                 //<
+    
+                // remove comment notation if it exists
+                let (is_a_comment, line_no_comment_opener) =
+                    remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
+    
                 let latest_comment =
                     match count_and_remove_begining_whitespace(&lines_list[line_of_latest_comment]) {
                         Some(x) => x,
