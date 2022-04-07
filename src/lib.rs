@@ -221,14 +221,21 @@ pub mod strfmt {
                 }
             }
         //<> add any needed whitespace
-            if lowest_depth < comment_tracker[comment_tracker.len() - 1].depth + tab_spaces as usize {
-                let depth_difference = comment_tracker[comment_tracker.len() - 1].depth
-                    + tab_spaces as usize
-                    - lowest_depth;
+            if lowest_depth < comment_tracker[comment_tracker.len() - 1].depth + tab_spaces {
+                let depth_difference =
+                    comment_tracker[comment_tracker.len() - 1].depth + tab_spaces - lowest_depth;
                 if depth_difference > 0 {
                     for i in line_of_last_unclosed_comment + 1..formatted_lines.len() {
-                        formatted_lines[i] =
-                            add_whitespace(&formatted_lines[i], depth_difference, whitespace_char)
+                        match count_and_remove_begining_whitespace(&formatted_lines[i]) {
+                            Some(_) => {
+                                formatted_lines[i] = add_whitespace(
+                                    &formatted_lines[i],
+                                    depth_difference,
+                                    whitespace_char,
+                                )
+                            }
+                            None => formatted_lines[i] = "\n".to_owned(),
+                        }
                     }
                 }
             }
