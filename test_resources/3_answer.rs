@@ -1,11 +1,11 @@
 // consume any previous now unecessary //<
-    
+
     let line_of_latest_comment = comment_tracker[comment_tracker.len() - 1].line;
-    
+
     // if there even could be a //< comment behind the lastest comment
     if line_of_latest_comment > 0 {
         let line_before_open_bracket_comment = &lines_list[line_of_latest_comment - 1];
-    
+
         // chop off begining spaces
             let mut line_no_leading_spaces = "";
             let mut leading_spaces: Option<usize> = None;
@@ -34,7 +34,7 @@
                 Some(x) => x,
                 None => (0, String::from("")),
             };
-    
+
         if is_a_comment
             && line_no_comment_opener.starts_with('<')
             && latest_comment.0 == leading_spaces.unwrap()

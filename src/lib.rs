@@ -936,7 +936,7 @@ pub mod strfmt {
                     lines_list.push(line.to_owned() + "\n");
                 }
             } else {
-                lines_list.push(line.to_owned() + "\n");
+                lines_list.push("\n".to_owned());
             }
         }
 
