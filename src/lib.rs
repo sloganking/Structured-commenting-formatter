@@ -605,9 +605,9 @@ pub mod strfmt {
     }
 
     pub fn convert_to_brackets(str: &str, filetype: &str) -> Option<String> {
-        //> determine if file compatible
+        // determine if file compatible
         let comment_starter = *gen_compatable_file_table().get(filetype)?;
-        
+
         // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
         let str = &convert_to_bracketless(str, filetype).unwrap();
 
@@ -854,7 +854,7 @@ pub mod strfmt {
     }
 
     pub fn convert_to_bracketless(str: &str, filetype: &str) -> Option<String> {
-        //> determine if file compatible
+        // determine if file compatible
         let comment_starter = *gen_compatable_file_table().get(filetype)?;
 
         //format str before removing brackets, to ensure their information is not lost.
