@@ -656,15 +656,9 @@ pub mod strfmt {
             // chop off begining spaces
             let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
-            //> determine if line is a comment
-                let comment_starter_with_space = comment_starter.to_owned() + " ";
-                let mut is_a_comment = false;
-                if line_no_leading_spaces.starts_with(&comment_starter_with_space)
-                    || line_no_leading_spaces.starts_with(comment_starter)
-                {
-                    is_a_comment = true;
-                }
-            //<
+            let (is_a_comment, _) =
+                remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
+
             match leading_spaces {
                 Some(x) => {
                     if is_a_comment {
