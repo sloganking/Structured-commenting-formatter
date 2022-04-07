@@ -189,8 +189,7 @@ pub mod strfmt {
 
     pub fn format_str(str: &str, filetype: &str) -> Option<String> {
         //> determine if file compatible
-            let filetype_to_comment = gen_compatable_file_table();
-            let comment_starter = match filetype_to_comment.get(filetype) {
+            let comment_starter = match gen_compatable_file_table().get(filetype) {
                 Some(x) => *x,
                 None => return None,
             };
@@ -466,7 +465,6 @@ pub mod strfmt {
     fn end_the_last_structured_comments(
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
-        cur_line: &mut usize,
         leading_spaces: usize,
         comment_starter: &str,
         whitespace_char: char,
@@ -477,7 +475,6 @@ pub mod strfmt {
             //> remove above whitespace
                 while !lines_list.is_empty() && line_is_only_whitepace(lines_list.last().unwrap()) {
                     lines_list.pop();
-                    *cur_line -= 1;
                 }
             //<
             let close_bracket_line = new_comment_closed_bracket(
@@ -487,7 +484,6 @@ pub mod strfmt {
             )
             .unwrap();
             lines_list.push(close_bracket_line);
-            *cur_line += 1;
             comment_tracker.pop();
         }
     }
@@ -495,13 +491,12 @@ pub mod strfmt {
     fn pass_a_new_comment_that_we_dont_know_if_its_structured(
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
-        cur_line: &mut usize,
         leading_spaces: Option<usize>,
         unsure_if_last_comment_was_structured: &mut bool,
         line: &str,
     ) {
         let comment = CommentDetail {
-            line: *cur_line,
+            line: lines_list.len(),
             depth: leading_spaces.unwrap(),
         };
 
@@ -509,7 +504,6 @@ pub mod strfmt {
         *unsure_if_last_comment_was_structured = true;
 
         lines_list.push(String::from(line));
-        *cur_line += 1;
     }
 
     fn count_and_remove_begining_whitespace(line: &str) -> Option<(usize, String)> {
@@ -615,8 +609,7 @@ pub mod strfmt {
 
     pub fn convert_to_brackets(str: &str, filetype: &str) -> Option<String> {
         //> determine if file compatible
-            let filetype_to_comment = gen_compatable_file_table();
-            let comment_starter = match filetype_to_comment.get(filetype) {
+            let comment_starter = match gen_compatable_file_table().get(filetype) {
                 Some(x) => *x,
                 None => return None,
             };
@@ -631,7 +624,6 @@ pub mod strfmt {
         let mut lines_list: Vec<String> = Vec::new();
         let mut unsure_if_last_comment_was_structured = true;
 
-        let mut cur_line: usize = 0;
         for line in str.lines() {
             //> chop off begining spaces
                 let mut line_no_leading_spaces = "";
@@ -671,7 +663,6 @@ pub mod strfmt {
                                     pass_a_new_comment_that_we_dont_know_if_its_structured(
                                         &mut lines_list,
                                         &mut comment_tracker,
-                                        &mut cur_line,
                                         leading_spaces,
                                         &mut unsure_if_last_comment_was_structured,
                                         line,
@@ -684,7 +675,6 @@ pub mod strfmt {
                                     end_the_last_structured_comments(
                                         &mut lines_list,
                                         &mut comment_tracker,
-                                        &mut cur_line,
                                         x,
                                         comment_starter,
                                         whitespace_char,
@@ -693,7 +683,6 @@ pub mod strfmt {
                                     pass_a_new_comment_that_we_dont_know_if_its_structured(
                                         &mut lines_list,
                                         &mut comment_tracker,
-                                        &mut cur_line,
                                         leading_spaces,
                                         &mut unsure_if_last_comment_was_structured,
                                         line,
@@ -703,7 +692,6 @@ pub mod strfmt {
                                 pass_a_new_comment_that_we_dont_know_if_its_structured(
                                     &mut lines_list,
                                     &mut comment_tracker,
-                                    &mut cur_line,
                                     leading_spaces,
                                     &mut unsure_if_last_comment_was_structured,
                                     line,
@@ -712,7 +700,6 @@ pub mod strfmt {
                                 end_the_last_structured_comments(
                                     &mut lines_list,
                                     &mut comment_tracker,
-                                    &mut cur_line,
                                     x,
                                     comment_starter,
                                     whitespace_char,
@@ -721,7 +708,6 @@ pub mod strfmt {
                                 pass_a_new_comment_that_we_dont_know_if_its_structured(
                                     &mut lines_list,
                                     &mut comment_tracker,
-                                    &mut cur_line,
                                     leading_spaces,
                                     &mut unsure_if_last_comment_was_structured,
                                     line,
@@ -731,7 +717,6 @@ pub mod strfmt {
                             pass_a_new_comment_that_we_dont_know_if_its_structured(
                                 &mut lines_list,
                                 &mut comment_tracker,
-                                &mut cur_line,
                                 leading_spaces,
                                 &mut unsure_if_last_comment_was_structured,
                                 line,
@@ -755,7 +740,6 @@ pub mod strfmt {
                                 end_the_last_structured_comments(
                                     &mut lines_list,
                                     &mut comment_tracker,
-                                    &mut cur_line,
                                     x,
                                     comment_starter,
                                     whitespace_char,
@@ -764,15 +748,12 @@ pub mod strfmt {
                             unsure_if_last_comment_was_structured = false;
 
                             lines_list.push(String::from(line));
-                            cur_line += 1;
                         } else if x > comment_tracker[comment_tracker.len() - 1].depth {
                             lines_list.push(String::from(line));
-                            cur_line += 1;
                         } else {
                             end_the_last_structured_comments(
                                 &mut lines_list,
                                 &mut comment_tracker,
-                                &mut cur_line,
                                 x,
                                 comment_starter,
                                 whitespace_char,
@@ -780,17 +761,14 @@ pub mod strfmt {
 
                             //> forward the current line
                                 lines_list.push(String::from(line));
-                                cur_line += 1;
                             //<
                         }
                     } else {
                         lines_list.push(String::from(line));
-                        cur_line += 1;
                     }
                 }
                 None => {
                     lines_list.push(String::from(line));
-                    cur_line += 1;
                 }
             }
         }
@@ -803,7 +781,6 @@ pub mod strfmt {
         end_the_last_structured_comments(
             &mut lines_list,
             &mut comment_tracker,
-            &mut cur_line,
             0,
             comment_starter,
             whitespace_char,
@@ -886,8 +863,7 @@ pub mod strfmt {
 
     pub fn convert_to_bracketless(str: &str, filetype: &str) -> Option<String> {
         //> determine if file compatible
-            let filetype_to_comment = gen_compatable_file_table();
-            let comment_starter = match filetype_to_comment.get(filetype) {
+            let comment_starter = match gen_compatable_file_table().get(filetype) {
                 Some(x) => *x,
                 None => return None,
             };
