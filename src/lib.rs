@@ -753,9 +753,8 @@ pub mod strfmt {
                                 whitespace_char,
                             );
 
-                            //> forward the current line
-                                lines_list.push(String::from(line));
-                            //<
+                            // forward the current line
+                            lines_list.push(String::from(line));
                         }
                     } else {
                         lines_list.push(String::from(line));
