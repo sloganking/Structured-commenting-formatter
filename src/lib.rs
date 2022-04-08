@@ -76,6 +76,16 @@ mod tests {
             let formatted = strfmt::remove_brackets(&before_formatting, "rs").unwrap();
             assert_eq!(formatted, "//\n");
         }
+
+    //<> tabs
+        #[test]
+        fn format_str_tabs() {
+            let to_format = fs::read_to_string("./test_resources/9_test.rs").unwrap();
+            let answer = fs::read_to_string("./test_resources/9_answer.rs").unwrap();
+            let formatted = strfmt::format_str(&to_format, "rs").unwrap();
+            println!("{}", formatted);
+            assert_eq!(answer, formatted);
+        }
     //<
 }
 
