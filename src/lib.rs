@@ -3,59 +3,61 @@ mod tests {
     use crate::strfmt;
     use std::fs;
 
-    #[test]
-    fn format_str() {
-        let to_format = fs::read_to_string("./test_resources/1_test.rs").unwrap();
-        let answer = fs::read_to_string("./test_resources/1_answer.rs").unwrap();
-        let formatted = strfmt::format_str(&to_format, "rs").unwrap();
-        assert_eq!(answer, formatted);
-    }
+    //> basic tests
+        #[test]
+        fn format_str() {
+            let to_format = fs::read_to_string("./test_resources/1_test.rs").unwrap();
+            let answer = fs::read_to_string("./test_resources/1_answer.rs").unwrap();
+            let formatted = strfmt::format_str(&to_format, "rs").unwrap();
+            assert_eq!(answer, formatted);
+        }
 
-    #[test]
-    fn add_brackets() {
-        let to_format = fs::read_to_string("./test_resources/2_test.rs").unwrap();
-        let answer = fs::read_to_string("./test_resources/2_answer.rs").unwrap();
-        let formatted = strfmt::add_brackets(&to_format, "rs").unwrap();
-        assert_eq!(answer, formatted);
-    }
+        #[test]
+        fn add_brackets() {
+            let to_format = fs::read_to_string("./test_resources/2_test.rs").unwrap();
+            let answer = fs::read_to_string("./test_resources/2_answer.rs").unwrap();
+            let formatted = strfmt::add_brackets(&to_format, "rs").unwrap();
+            assert_eq!(answer, formatted);
+        }
 
-    #[test]
-    fn remove_brackets() {
-        let to_format = fs::read_to_string("./test_resources/3_test.rs").unwrap();
-        let answer = fs::read_to_string("./test_resources/3_answer.rs").unwrap();
-        let formatted = strfmt::remove_brackets(&to_format, "rs").unwrap();
-        assert_eq!(answer, formatted);
-    }
+        #[test]
+        fn remove_brackets() {
+            let to_format = fs::read_to_string("./test_resources/3_test.rs").unwrap();
+            let answer = fs::read_to_string("./test_resources/3_answer.rs").unwrap();
+            let formatted = strfmt::remove_brackets(&to_format, "rs").unwrap();
+            assert_eq!(answer, formatted);
+        }
 
-    #[test]
-    fn no_change_without_brackets() {
-        let before_formatting = fs::read_to_string("./test_resources/4_test.rs").unwrap();
-        let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
-        assert_eq!(formatted, before_formatting);
-    }
+        #[test]
+        fn no_change_without_brackets() {
+            let before_formatting = fs::read_to_string("./test_resources/4_test.rs").unwrap();
+            let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
+            assert_eq!(formatted, before_formatting);
+        }
 
-    #[test]
-    fn no_head_for_closing() {
-        let before_formatting = fs::read_to_string("./test_resources/5_test.rs").unwrap();
-        let formatted = strfmt::format_str(&before_formatting, "rs");
-        assert_eq!(formatted, Err((46, "< closed nothing".to_owned())));
-    }
+    //<> Brackets not closed properly
+        #[test]
+        fn no_head_for_closing() {
+            let before_formatting = fs::read_to_string("./test_resources/5_test.rs").unwrap();
+            let formatted = strfmt::format_str(&before_formatting, "rs");
+            assert_eq!(formatted, Err((46, "< closed nothing".to_owned())));
+        }
 
-    #[test]
-    fn no_head_for_middle() {
-        let before_formatting = fs::read_to_string("./test_resources/6_test.rs").unwrap();
-        let formatted = strfmt::format_str(&before_formatting, "rs");
-        assert_eq!(formatted, Err((21, "<> closed nothing".to_owned())));
-    }
+        #[test]
+        fn no_head_for_middle() {
+            let before_formatting = fs::read_to_string("./test_resources/6_test.rs").unwrap();
+            let formatted = strfmt::format_str(&before_formatting, "rs");
+            assert_eq!(formatted, Err((21, "<> closed nothing".to_owned())));
+        }
 
-    #[test]
-    fn head_never_closed() {
-        let before_formatting = fs::read_to_string("./test_resources/7_test.rs").unwrap();
-        let formatted = strfmt::format_str(&before_formatting, "rs");
-        assert_eq!(formatted, Err((1, "unclosed comment".to_owned())));
-    }
+        #[test]
+        fn head_never_closed() {
+            let before_formatting = fs::read_to_string("./test_resources/7_test.rs").unwrap();
+            let formatted = strfmt::format_str(&before_formatting, "rs");
+            assert_eq!(formatted, Err((1, "unclosed comment".to_owned())));
+        }
 
-    //> operations leave one empty line at end of string
+    //<> operations leave one empty line at end of string
         #[test]
         fn format_leaves_last_line_empty() {
             let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
@@ -82,6 +84,15 @@ mod tests {
         fn format_str_tabs() {
             let to_format = fs::read_to_string("./test_resources/9_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/9_answer.rs").unwrap();
+            let formatted = strfmt::format_str(&to_format, "rs").unwrap();
+            println!("{}", formatted);
+            assert_eq!(answer, formatted);
+        }
+    //<> tab depth of 2
+        #[test]
+        fn format_str_tab_depth_of_2() {
+            let to_format = fs::read_to_string("./test_resources/10_test.rs").unwrap();
+            let answer = fs::read_to_string("./test_resources/10_answer.rs").unwrap();
             let formatted = strfmt::format_str(&to_format, "rs").unwrap();
             println!("{}", formatted);
             assert_eq!(answer, formatted);

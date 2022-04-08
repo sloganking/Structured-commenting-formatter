@@ -35,7 +35,7 @@
                 Some(x) => x,
                 None => (0, String::from("")),
             };
-    
+
         if is_a_comment
             && line_no_comment_opener.starts_with('<')
             && latest_comment.0 == leading_spaces.unwrap()
