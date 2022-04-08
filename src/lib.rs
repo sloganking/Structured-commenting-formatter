@@ -192,29 +192,92 @@ pub mod strfmt {
 
     fn gen_compatable_file_table() -> HashMap<&'static str, &'static str> {
         let mut filetype_to_comment = HashMap::new();
+        //> ada
+            filetype_to_comment.insert("adb", "--");
+            filetype_to_comment.insert("ads", "--");
+        //<
+        // Assembly
         filetype_to_comment.insert("asm", ";");
+        // AL
+        filetype_to_comment.insert("al", "//");
+        filetype_to_comment.insert("bib", "%");
+        filetype_to_comment.insert("brs", "'");
+        // C
         filetype_to_comment.insert("c", "//");
+        filetype_to_comment.insert("cfc", "//");
+        // Clojure
+        filetype_to_comment.insert("clj", ";");
+        // Apex
+        filetype_to_comment.insert("cls", "//");
         filetype_to_comment.insert("cpp", "//");
+        //> C#
+            filetype_to_comment.insert("cs", "//");
+            filetype_to_comment.insert("csx", "//");
+        //<
+        filetype_to_comment.insert("d", "//");
+        // Dart
+        filetype_to_comment.insert("dart", "//");
+        filetype_to_comment.insert("do", "*");
+        filetype_to_comment.insert("ex", "#");
+        filetype_to_comment.insert("elm", "--");
+        filetype_to_comment.insert("gd", "#");
+        filetype_to_comment.insert("gen", "\\");
+        // Go
         filetype_to_comment.insert("go", "//");
+        filetype_to_comment.insert("graphql", "#");
+        filetype_to_comment.insert("groovy", "//");
         //> Haskell
             filetype_to_comment.insert("hs", "--");
             filetype_to_comment.insert("lhs", "--");
         //<
+        // Java
         filetype_to_comment.insert("java", "//");
         //> JavaScript
             filetype_to_comment.insert("js", "//");
             filetype_to_comment.insert("cjs", "//");
             filetype_to_comment.insert("mjs", "//");
         //<
+        filetype_to_comment.insert("jsonc", "//");
+        filetype_to_comment.insert("lisp", ";;");
         filetype_to_comment.insert("lua", "--");
+        // MATLAB
+        filetype_to_comment.insert("m", "%");
+        filetype_to_comment.insert("nim", "#");
+        // Pascal
+        filetype_to_comment.insert("pas", "//");
+        // PHP
+        filetype_to_comment.insert("php", "//");
+        filetype_to_comment.insert("pig", "--");
+        filetype_to_comment.insert("plsql", "--");
+        filetype_to_comment.insert("pp", "//");
+        filetype_to_comment.insert("ps1", "#");
+        filetype_to_comment.insert("pu", "'");
+        filetype_to_comment.insert("q", "--");
+        filetype_to_comment.insert("rkt", ";");
+        // Rust
         filetype_to_comment.insert("rs", "//");
+        filetype_to_comment.insert("sas", "*");
+        filetype_to_comment.insert("sass", "//");
+        filetype_to_comment.insert("scss", "//");
+        filetype_to_comment.insert("shader", "//");
+        // Bash
         filetype_to_comment.insert("sh", "#");
+        // Solidity
         filetype_to_comment.insert("sol", "//");
+        filetype_to_comment.insert("styl", "//");
+        filetype_to_comment.insert("svelte", "//");
+        filetype_to_comment.insert("tcl", "#");
         filetype_to_comment.insert("toml", "#");
         //> TypeScript
             filetype_to_comment.insert("ts", "//");
             filetype_to_comment.insert("tsx", "//");
         //<
+        filetype_to_comment.insert("vala", "//");
+        filetype_to_comment.insert("v", "//");
+        filetype_to_comment.insert("vhdl", "--");
+        filetype_to_comment.insert("vue", "//");
+        filetype_to_comment.insert("yaml", "#");
+
         filetype_to_comment
     }
 
