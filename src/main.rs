@@ -9,17 +9,32 @@ fn main() {
         panic!("strfmt was passed too few arguments");
     } else if args.len() == 2 {
         let dir = &args[1];
-        let path = PathBuf::from(dir);
 
-        if path.is_dir() {
-            let paths = strfmt::get_files_in_dir(dir, "");
-            for file in paths {
-                strfmt::format_file(file);
-            }
-        } else if path.is_file() {
-            strfmt::format_file(path);
+        if dir == "help" {
+            println!(
+                "strfmt - structured commenting formatter
+
+USAGE:
+    [OPTIONS] [DIRECTORY]
+
+OPTIONS:
+    *None*                  Passing no option simply formats bracketed structured comments
+    add_brackets            Gives brackets to any bracketless strucutered comments
+    remove_brackets         Removes brackets from any bracketed structured comments"
+            )
         } else {
-            panic!("arg must be a file, path, or command")
+            let path = PathBuf::from(dir);
+
+            if path.is_dir() {
+                let paths = strfmt::get_files_in_dir(dir, "");
+                for file in paths {
+                    strfmt::format_file(file);
+                }
+            } else if path.is_file() {
+                strfmt::format_file(path);
+            } else {
+                panic!("arg must be a file, path, or command")
+            }
         }
     } else if args.len() == 3 {
         let flag = &args[1];
