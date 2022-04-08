@@ -60,22 +60,19 @@ mod tests {
     //<> operations leave one empty line at end of string
         #[test]
         fn format_leaves_last_line_empty() {
-            let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
-            let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
+            let formatted = strfmt::format_str("//>\n//<", "rs").unwrap();
             assert_eq!(formatted, "//>\n//<\n");
         }
 
         #[test]
         fn add_brackets_leaves_last_line_empty() {
-            let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
-            let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
-            assert_eq!(formatted, "//>\n//<\n");
+            let formatted = strfmt::add_brackets("// Hello World!\n    let a = 0;", "rs").unwrap();
+            assert_eq!(formatted, "//> Hello World!\n    let a = 0;\n//<\n");
         }
 
         #[test]
         fn remove_brackets_leaves_last_line_empty() {
-            let before_formatting = fs::read_to_string("./test_resources/8_test.rs").unwrap();
-            let formatted = strfmt::remove_brackets(&before_formatting, "rs").unwrap();
+            let formatted = strfmt::remove_brackets("//>\n//<", "rs").unwrap();
             assert_eq!(formatted, "//\n");
         }
 
