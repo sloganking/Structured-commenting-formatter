@@ -351,7 +351,12 @@ pub mod strfmt {
                     // remove comment from comment tracker
                     comment_tracker.pop();
                 } else {
-                    formatted_line = line.to_string();
+                    if leading_spaces != None {
+                        formatted_line = line.to_string();
+                    } else {
+                        // all whitespace only lines are set to depth 0
+                        formatted_line = "".to_string();
+                    }
                 }
             //<
             formatted_lines.push(formatted_line + "\n");
