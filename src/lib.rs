@@ -99,11 +99,100 @@ pub mod strfmt {
 
     use colored::*;
     use glob::glob;
-    use std::collections::HashMap;
+    use phf::phf_map;
     use std::fs;
     use std::fs::File;
     use std::io::Write;
     use std::path::PathBuf;
+
+    static EXTENSION_TO_COMMENT_STARTER_MAP: phf::Map<&'static str, &'static str> = phf_map! {
+
+        //> ada
+            "adb" => "--",
+            "ads" => "--",
+        //<
+        // Assembly
+        "asm" => ";",
+        // AL
+        "al" => "//",
+        "bib" => "%",
+        "brs" => "'",
+        // C
+        "c" => "//",
+        "cfc" => "//",
+        // Clojure
+        "clj" => ";",
+        // Apex
+        "cls" => "//",
+        "cpp" => "//",
+        //> C#
+            "cs" => "//",
+            "csx" => "//",
+        //<
+        "d" => "//",
+        // Dart
+        "dart" => "//",
+        "do" => "*",
+        "ex" => "#",
+        "elm" => "--",
+        "gd" => "#",
+        "gen" => "\\",
+        // Go
+        "go" => "//",
+        "graphql" => "#",
+        "groovy" => "//",
+        //> Haskell
+            "hs" => "--",
+            "lhs" => "--",
+        //<
+        // Java
+        "java" => "//",
+        //> JavaScript
+            "js" => "//",
+            "cjs" => "//",
+            "mjs" => "//",
+        //<
+        "jsonc" => "//",
+        "lisp" => ";;",
+        "lua" => "--",
+        // MATLAB
+        "m" => "%",
+        "nim" => "#",
+        // Pascal
+        "pas" => "//",
+        // PHP
+        "php" => "//",
+        "pig" => "--",
+        "plsql" => "--",
+        "pp" => "//",
+        "ps1" => "#",
+        "pu" => "'",
+        "q" => "--",
+        "rkt" => ";",
+        // Rust
+        "rs" => "//",
+        "sas" => "*",
+        "sass" => "//",
+        "scss" => "//",
+        "shader" => "//",
+        // Bash
+        "sh" => "#",
+        // Solidity
+        "sol" => "//",
+        "styl" => "//",
+        "svelte" => "//",
+        "tcl" => "#",
+        "toml" => "#",
+        //> TypeScript
+            "ts" => "//",
+            "tsx" => "//",
+        //<
+        "vala" => "//",
+        "v" => "//",
+        "vhdl" => "--",
+        "vue" => "//",
+        "yaml" => "#",
+    };
 
     fn determine_whitespace_type(str: &str) -> (char, usize) {
         //> if no whitespace is found, assume format is 4 spaces
@@ -188,97 +277,6 @@ pub mod strfmt {
         paths
     }
 
-    fn gen_compatable_file_table() -> HashMap<&'static str, &'static str> {
-        let mut filetype_to_comment = HashMap::new();
-        //> ada
-            filetype_to_comment.insert("adb", "--");
-            filetype_to_comment.insert("ads", "--");
-        //<
-        // Assembly
-        filetype_to_comment.insert("asm", ";");
-        // AL
-        filetype_to_comment.insert("al", "//");
-        filetype_to_comment.insert("bib", "%");
-        filetype_to_comment.insert("brs", "'");
-        // C
-        filetype_to_comment.insert("c", "//");
-        filetype_to_comment.insert("cfc", "//");
-        // Clojure
-        filetype_to_comment.insert("clj", ";");
-        // Apex
-        filetype_to_comment.insert("cls", "//");
-        filetype_to_comment.insert("cpp", "//");
-        //> C#
-            filetype_to_comment.insert("cs", "//");
-            filetype_to_comment.insert("csx", "//");
-        //<
-        filetype_to_comment.insert("d", "//");
-        // Dart
-        filetype_to_comment.insert("dart", "//");
-        filetype_to_comment.insert("do", "*");
-        filetype_to_comment.insert("ex", "#");
-        filetype_to_comment.insert("elm", "--");
-        filetype_to_comment.insert("gd", "#");
-        filetype_to_comment.insert("gen", "\\");
-        // Go
-        filetype_to_comment.insert("go", "//");
-        filetype_to_comment.insert("graphql", "#");
-        filetype_to_comment.insert("groovy", "//");
-        //> Haskell
-            filetype_to_comment.insert("hs", "--");
-            filetype_to_comment.insert("lhs", "--");
-        //<
-        // Java
-        filetype_to_comment.insert("java", "//");
-        //> JavaScript
-            filetype_to_comment.insert("js", "//");
-            filetype_to_comment.insert("cjs", "//");
-            filetype_to_comment.insert("mjs", "//");
-        //<
-        filetype_to_comment.insert("jsonc", "//");
-        filetype_to_comment.insert("lisp", ";;");
-        filetype_to_comment.insert("lua", "--");
-        // MATLAB
-        filetype_to_comment.insert("m", "%");
-        filetype_to_comment.insert("nim", "#");
-        // Pascal
-        filetype_to_comment.insert("pas", "//");
-        // PHP
-        filetype_to_comment.insert("php", "//");
-        filetype_to_comment.insert("pig", "--");
-        filetype_to_comment.insert("plsql", "--");
-        filetype_to_comment.insert("pp", "//");
-        filetype_to_comment.insert("ps1", "#");
-        filetype_to_comment.insert("pu", "'");
-        filetype_to_comment.insert("q", "--");
-        filetype_to_comment.insert("rkt", ";");
-        // Rust
-        filetype_to_comment.insert("rs", "//");
-        filetype_to_comment.insert("sas", "*");
-        filetype_to_comment.insert("sass", "//");
-        filetype_to_comment.insert("scss", "//");
-        filetype_to_comment.insert("shader", "//");
-        // Bash
-        filetype_to_comment.insert("sh", "#");
-        // Solidity
-        filetype_to_comment.insert("sol", "//");
-        filetype_to_comment.insert("styl", "//");
-        filetype_to_comment.insert("svelte", "//");
-        filetype_to_comment.insert("tcl", "#");
-        filetype_to_comment.insert("toml", "#");
-        //> TypeScript
-            filetype_to_comment.insert("ts", "//");
-            filetype_to_comment.insert("tsx", "//");
-        //<
-        filetype_to_comment.insert("vala", "//");
-        filetype_to_comment.insert("v", "//");
-        filetype_to_comment.insert("vhdl", "--");
-        filetype_to_comment.insert("vue", "//");
-        filetype_to_comment.insert("yaml", "#");
-
-        filetype_to_comment
-    }
-
     fn ensure_previous_lines_have_correct_whitespace(
         formatted_lines: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
@@ -352,7 +350,7 @@ pub mod strfmt {
 
     pub fn format_str(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
-        let comment_starter = match gen_compatable_file_table().get(filetype) {
+        let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
             Some(x) => *x,
             None => return Err((0, "Incompatible file type".to_owned())),
         };
@@ -721,7 +719,7 @@ pub mod strfmt {
 
     pub fn add_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
-        let comment_starter = match gen_compatable_file_table().get(filetype) {
+        let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
             Some(x) => *x,
             None => return Err((0, "Incompatible file type".to_owned())),
         };
@@ -962,7 +960,7 @@ pub mod strfmt {
 
     pub fn remove_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
-        let comment_starter = match gen_compatable_file_table().get(filetype) {
+        let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
             Some(x) => *x,
             None => return Err((0, "Incompatible file type".to_owned())),
         };
