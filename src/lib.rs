@@ -548,15 +548,18 @@ pub mod strfmt {
         };
 
         //> write file
-            let mut output = match File::create(file) {
-                Ok(x) => x,
-                Err(_) => return false,
-            };
+            // leave file alone if there was no change
+            if formatted != contents {
+                let mut output = match File::create(file) {
+                    Ok(x) => x,
+                    Err(_) => return false,
+                };
 
-            match write!(output, "{}", formatted) {
-                Ok(x) => x,
-                Err(_) => return false,
-            };
+                match write!(output, "{}", formatted) {
+                    Ok(x) => x,
+                    Err(_) => return false,
+                };
+            }
         //<
 
         true
@@ -585,15 +588,18 @@ pub mod strfmt {
         };
 
         //> write file
-            let mut output = match File::create(file) {
-                Ok(x) => x,
-                Err(_) => return false,
-            };
+            // leave file alone if there was no change
+            if converted != contents {
+                let mut output = match File::create(file) {
+                    Ok(x) => x,
+                    Err(_) => return false,
+                };
 
-            match write!(output, "{}", converted) {
-                Ok(x) => x,
-                Err(_) => return false,
-            };
+                match write!(output, "{}", converted) {
+                    Ok(x) => x,
+                    Err(_) => return false,
+                };
+            }
         //<
 
         true
@@ -1046,8 +1052,18 @@ pub mod strfmt {
         };
 
         //> write file
-            let mut output = File::create(file).unwrap();
-            write!(output, "{}", converted).expect("failed to write file");
+            // leave file alone if there was no change
+            if converted != contents {
+                let mut output = match File::create(file) {
+                    Ok(x) => x,
+                    Err(_) => return false,
+                };
+
+                match write!(output, "{}", converted) {
+                    Ok(x) => x,
+                    Err(_) => return false,
+                };
+            }
         //<
 
         true
