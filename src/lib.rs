@@ -702,16 +702,6 @@ pub mod strfmt {
                         None => (0, String::from("")),
                     };
 
-                println!("is_a_comment: {}", is_a_comment);
-                println!(
-                    "line_no_comment_opener.starts_with('<'): {}",
-                    line_no_comment_opener.starts_with('<')
-                );
-                println!(
-                    "latest_comment.0 == leading_spaces.unwrap(): {}",
-                    latest_comment.0 == leading_spaces.unwrap()
-                );
-
                 if is_a_comment
                     && line_no_comment_opener.starts_with('<')
                     && latest_comment.0 == leading_spaces.unwrap()
@@ -723,7 +713,6 @@ pub mod strfmt {
         let line_with_no_bracket = lines_list[line_of_latest_comment].clone();
 
         if should_consume_closing_comment {
-            println!("Inside should_consume_closing_comment");
 
             //> pop everything to the last //<, but remember how to restore what was popped.
                 let after_spaces = count_ending_empty_lines(lines_list);
