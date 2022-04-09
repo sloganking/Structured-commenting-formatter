@@ -39,7 +39,7 @@ OPTIONS:
     } else if args.len() == 3 {
         let flag = &args[1];
 
-        if flag == "add_brackets" || flag == "ab"{
+        if flag == "add_brackets" || flag == "ab" {
             let dir = &args[2];
             let path = PathBuf::from(dir);
 
@@ -53,7 +53,7 @@ OPTIONS:
             } else {
                 panic!("second arg must be a path or file");
             }
-        } else if flag == "remove_brackets" || flag == "rb"{
+        } else if flag == "remove_brackets" || flag == "rb" {
             let dir = &args[2];
             let path = PathBuf::from(dir);
 

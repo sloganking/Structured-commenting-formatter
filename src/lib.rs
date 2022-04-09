@@ -609,6 +609,8 @@ pub mod strfmt {
         while !comment_tracker.is_empty()
             && leading_spaces <= comment_tracker[comment_tracker.len() - 1].depth
         {
+            let empty_line_count = count_ending_empty_lines(lines_list);
+
             // remove above whitespace
             remove_empty_tail(lines_list);
 
@@ -620,6 +622,8 @@ pub mod strfmt {
             .unwrap();
             lines_list.push(close_bracket_line);
             comment_tracker.pop();
+
+            append_num_empty_lines(empty_line_count, lines_list);
         }
     }
 
@@ -653,6 +657,19 @@ pub mod strfmt {
         }
     }
 
+    fn last_non_empty_line_before_index(
+        index: usize,
+        lines_list: &Vec<String>,
+    ) -> Option<(usize, &str)> {
+        for i in (0..index).rev() {
+            if !line_is_only_whitepace(&lines_list[i]) {
+                return Some((i, &lines_list[i]));
+            }
+        }
+
+        None
+    }
+
     fn add_open_bracket_to_last_comment(
         lines_list: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
@@ -664,10 +681,13 @@ pub mod strfmt {
 
             let line_of_latest_comment = comment_tracker[comment_tracker.len() - 1].line;
 
-            // if there even could be a //< comment behind the lastest comment
-            if line_of_latest_comment > 0 {
-                let line_before_open_bracket_comment = &lines_list[line_of_latest_comment - 1];
+            let last_solid_line_option =
+                last_non_empty_line_before_index(line_of_latest_comment, lines_list);
 
+            // if there even could be a //< comment behind the lastest comment
+            if let Some((_last_solid_line_index, line_before_open_bracket_comment)) =
+                last_solid_line_option
+            {
                 // chop off begining spaces
                 let (leading_spaces, line_no_leading_spaces) =
                     chop_off_beginning_spaces(line_before_open_bracket_comment);
@@ -682,6 +702,16 @@ pub mod strfmt {
                         None => (0, String::from("")),
                     };
 
+                println!("is_a_comment: {}", is_a_comment);
+                println!(
+                    "line_no_comment_opener.starts_with('<'): {}",
+                    line_no_comment_opener.starts_with('<')
+                );
+                println!(
+                    "latest_comment.0 == leading_spaces.unwrap(): {}",
+                    latest_comment.0 == leading_spaces.unwrap()
+                );
+
                 if is_a_comment
                     && line_no_comment_opener.starts_with('<')
                     && latest_comment.0 == leading_spaces.unwrap()
@@ -693,13 +723,34 @@ pub mod strfmt {
         let line_with_no_bracket = lines_list[line_of_latest_comment].clone();
 
         if should_consume_closing_comment {
-            // overwrite the //< with whitespace
-            lines_list[line_of_latest_comment - 1] = String::from("");
+            println!("Inside should_consume_closing_comment");
 
-            // append brackets to latest comment
-            lines_list[line_of_latest_comment] =
-                make_comment_closed_and_open_bracket(&line_with_no_bracket, comment_starter)
-                    .unwrap();
+            //> pop everything to the last //<, but remember how to restore what was popped.
+                let after_spaces = count_ending_empty_lines(lines_list);
+                remove_empty_tail(lines_list);
+
+                // remove the soon to be bracketed comment
+                // we'll add it back later
+                lines_list.pop();
+
+                let before_spaces = count_ending_empty_lines(lines_list);
+                remove_empty_tail(lines_list);
+
+            //<> remove the //<
+                lines_list.pop();
+
+            //<> put things back and make add brackets to latest comment
+
+                append_num_empty_lines(before_spaces, lines_list);
+
+                // re-append the latest comment, with added brackets
+                lines_list.push(
+                    make_comment_closed_and_open_bracket(&line_with_no_bracket, comment_starter)
+                        .unwrap(),
+                );
+
+                append_num_empty_lines(after_spaces, lines_list);
+            //<
         } else {
             // append bracket to latest comment
             lines_list[line_of_latest_comment] =
@@ -861,7 +912,7 @@ pub mod strfmt {
                     }
                 }
                 None => {
-                    lines_list.push(String::from(line));
+                    lines_list.push(String::from("".to_owned()));
                 }
             }
         }
@@ -954,6 +1005,24 @@ pub mod strfmt {
                 line_no_comment_starter.to_string()
             }
             None => str.to_owned(),
+        }
+    }
+
+    fn count_ending_empty_lines(lines_list: &Vec<String>) -> usize {
+        let mut count = 0;
+        for i in (0..lines_list.len()).rev() {
+            if !line_is_only_whitepace(&lines_list[i]) {
+                break;
+            }
+            count += 1;
+        }
+
+        count
+    }
+
+    fn append_num_empty_lines(num: usize, lines_list: &mut Vec<String>) {
+        for _ in 0..num {
+            lines_list.push("".to_owned());
         }
     }
 
