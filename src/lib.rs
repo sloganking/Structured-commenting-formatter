@@ -58,22 +58,43 @@ mod tests {
         }
 
     //<> operations leave one empty line at end of string
+        // #[test]
+        // fn format_leaves_last_line_empty() {
+        //     let formatted = strfmt::format_str("//>\n//<", "rs").unwrap();
+        //     assert_eq!(formatted, "//>\n//<\n");
+        // }
+
+        // #[test]
+        // fn add_brackets_leaves_last_line_empty() {
+        //     let formatted = strfmt::add_brackets("// Hello World!\n    let a = 0;", "rs").unwrap();
+        //     assert_eq!(formatted, "//> Hello World!\n    let a = 0;\n//<\n");
+        // }
+
+        // #[test]
+        // fn remove_brackets_leaves_last_line_empty() {
+        //     let formatted = strfmt::remove_brackets("//>\n//<", "rs").unwrap();
+        //     assert_eq!(formatted, "//\n");
+        // }
+
+    //<> ending empty lines are preserved
         #[test]
         fn format_leaves_last_line_empty() {
-            let formatted = strfmt::format_str("//>\n//<", "rs").unwrap();
-            assert_eq!(formatted, "//>\n//<\n");
-        }
-
-        #[test]
-        fn add_brackets_leaves_last_line_empty() {
-            let formatted = strfmt::add_brackets("// Hello World!\n    let a = 0;", "rs").unwrap();
-            assert_eq!(formatted, "//> Hello World!\n    let a = 0;\n//<\n");
-        }
-
-        #[test]
-        fn remove_brackets_leaves_last_line_empty() {
-            let formatted = strfmt::remove_brackets("//>\n//<", "rs").unwrap();
-            assert_eq!(formatted, "//\n");
+            //> empty input
+                let formatted = strfmt::format_str("", "rs").unwrap();
+                assert_eq!(formatted, "");
+            //> 0 empty ending lines
+                let formatted = strfmt::format_str("//>\n//<", "rs").unwrap();
+                assert_eq!(formatted, "//>\n//<");
+            //<> 1 empty ending lines
+                let formatted = strfmt::format_str("//>\n//<\n", "rs").unwrap();
+                assert_eq!(formatted, "//>\n//<\n");
+            //<> 2 empty ending lines
+                let formatted = strfmt::format_str("//>\n//<\n\n", "rs").unwrap();
+                assert_eq!(formatted, "//>\n//<\n\n");
+            //<> 2 empty ending lines with space on last line
+                let formatted = strfmt::format_str("//>\n//<\n\n ", "rs").unwrap();
+                assert_eq!(formatted, "//>\n//<\n\n");
+            //<
         }
 
     //<> tabs
@@ -439,11 +460,20 @@ pub mod strfmt {
             formatted_lines.push(formatted_line + "\n");
         }
 
-        remove_empty_tail(&mut formatted_lines);
-
         //> turn all lines into one string
             for line in formatted_lines {
                 formatted_file.push_str(&line);
+            }
+
+        //<
+
+        // if the last char of source str wasn't '\n', don't add the last '\n'
+        //> This prevents adding an additional empty line to our output, that wasn't in our input
+            if let Some(last_char) = str.chars().last() {
+                if last_char != '\n' {
+                    // remove the last '\n'
+                    formatted_file.pop();
+                }
             }
 
         //<> ensure formatting successful
@@ -713,7 +743,6 @@ pub mod strfmt {
         let line_with_no_bracket = lines_list[line_of_latest_comment].clone();
 
         if should_consume_closing_comment {
-
             //> pop everything to the last //<, but remember how to restore what was popped.
                 let after_spaces = count_ending_empty_lines(lines_list);
                 remove_empty_tail(lines_list);
@@ -911,6 +940,7 @@ pub mod strfmt {
                 comment_tracker.pop();
             }
         //<
+
         end_the_last_structured_comments(
             &mut lines_list,
             &mut comment_tracker,
