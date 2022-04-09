@@ -445,9 +445,8 @@ pub mod strfmt {
             for line in formatted_lines {
                 formatted_file.push_str(&line);
             }
-        //<
 
-        //> ensure formatting successful
+        //<> ensure formatting successful
             if !comment_tracker.is_empty() {
                 let err_line = comment_tracker[comment_tracker.len() - 1].line + 1;
                 return Err((err_line, "unclosed comment".to_owned()));

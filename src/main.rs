@@ -18,9 +18,9 @@ USAGE:
     [OPTIONS] [DIRECTORY]
 
 OPTIONS:
-    *None*                  Passing no option simply formats bracketed structured comments
-    add_brackets            Gives brackets to any bracketless strucutered comments
-    remove_brackets         Removes brackets from any bracketed structured comments"
+    *None*                      Passing no option simply formats bracketed structured comments
+    ab, add_brackets            Gives brackets to any bracketless strucutered comments
+    rb, remove_brackets         Removes brackets from any bracketed structured comments"
             )
         } else {
             let path = PathBuf::from(dir);
@@ -39,7 +39,7 @@ OPTIONS:
     } else if args.len() == 3 {
         let flag = &args[1];
 
-        if flag == "add_brackets" {
+        if flag == "add_brackets" || flag == "ab"{
             let dir = &args[2];
             let path = PathBuf::from(dir);
 
@@ -53,7 +53,7 @@ OPTIONS:
             } else {
                 panic!("second arg must be a path or file");
             }
-        } else if flag == "remove_brackets" {
+        } else if flag == "remove_brackets" || flag == "rb"{
             let dir = &args[2];
             let path = PathBuf::from(dir);
 
