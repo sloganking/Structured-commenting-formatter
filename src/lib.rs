@@ -127,6 +127,29 @@ mod tests {
             //<
         }
 
+        #[test]
+        fn null_brackets_preserves_ending_empty_lines() {
+            //> empty input
+                let formatted = strfmt::null_existing_brackets("", "rs").unwrap();
+                assert_eq!(formatted, "");
+            //<> 0 empty ending lines
+                let formatted = strfmt::null_existing_brackets("//>\n//<", "rs").unwrap();
+                assert_eq!(formatted, "//_>\n//_<");
+            //<> 1 empty ending lines
+                let formatted = strfmt::null_existing_brackets("//>\n//<\n", "rs").unwrap();
+                assert_eq!(formatted, "//_>\n//_<\n");
+            //<> 2 empty ending lines
+                let formatted = strfmt::null_existing_brackets("//>\n//<\n\n", "rs").unwrap();
+                assert_eq!(formatted, "//_>\n//_<\n\n");
+            //<> 3 empty ending lines
+                let formatted = strfmt::null_existing_brackets("//>\n//<\n\n\n", "rs").unwrap();
+                assert_eq!(formatted, "//_>\n//_<\n\n\n");
+            //<> 3 empty ending lines with space at end
+                let formatted = strfmt::null_existing_brackets("//>\n//<\n\n\n ", "rs").unwrap();
+                assert_eq!(formatted, "//_>\n//_<\n\n\n");
+            //<
+        }
+
     //<> tabs
         #[test]
         fn format_str_tabs() {
@@ -154,6 +177,13 @@ mod tests {
         fn preserve_closing_comment_content_and_spacing() {
             let formatted = strfmt::format_str("//>\n// < test", "rs").unwrap();
             assert_eq!(formatted, "//>\n// <\n// test");
+        }
+    //<> nullify brackets
+        #[test]
+        fn nullify_brackets() {
+            let formatted =
+                strfmt::null_existing_brackets("//>\n    //>\n//\n    //<\n//<", "rs").unwrap();
+            assert_eq!(formatted, "//_>\n    //_>\n//\n    //_<\n//_<");
         }
     //<
 }
@@ -398,7 +428,10 @@ pub mod strfmt {
         (leading_spaces, line_no_leading_spaces)
     }
 
-    fn remove_comment_notation_if_it_exists(line: &str, comment_starter: &str) -> (bool, bool, String) {
+    fn remove_comment_notation_if_it_exists(
+        line: &str,
+        comment_starter: &str,
+    ) -> (bool, bool, String) {
         let mut line_no_comment_starter = line;
         let comment_starter_with_space = comment_starter.to_owned() + " ";
         let mut is_a_comment = false;
@@ -413,7 +446,11 @@ pub mod strfmt {
             line_no_comment_starter = &line_no_comment_starter[comment_starter.len()..];
         }
 
-        (is_a_comment, space_after_comment_starter, line_no_comment_starter.to_owned())
+        (
+            is_a_comment,
+            space_after_comment_starter,
+            line_no_comment_starter.to_owned(),
+        )
     }
 
     pub fn format_str(str: &str, filetype: &str) -> Result<String, (usize, String)> {
@@ -459,11 +496,13 @@ pub mod strfmt {
                         whitespace_char,
                     );
 
-                    formatted_lines.push(set_whitespace(
-                        line,
-                        comment_tracker[comment_tracker.len() - 1].depth,
-                        whitespace_char,
-                    ) + "\n");
+                    formatted_lines.push(
+                        set_whitespace(
+                            line,
+                            comment_tracker[comment_tracker.len() - 1].depth,
+                            whitespace_char,
+                        ) + "\n",
+                    );
 
                     //> remove and add comment to comment tracker
                         let comment = CommentDetail {
@@ -486,11 +525,7 @@ pub mod strfmt {
                     );
 
                     //> close comment
-                        let possible_space = if space_after_comment_starter{
-                            " "
-                        }else{
-                            ""
-                        };
+                        let possible_space = if space_after_comment_starter { " " } else { "" };
 
                         formatted_lines.push(set_whitespace(
                             &(comment_starter.to_owned() + possible_space + "<\n"),
@@ -1049,6 +1084,79 @@ pub mod strfmt {
         Ok(final_string)
     }
 
+    pub fn null_existing_brackets(str: &str, filetype: &str) -> Option<String> {
+        // determine if file compatible
+        let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
+            Some(x) => *x,
+            None => return None,
+        };
+
+        let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
+        let mut lines_list = Vec::new();
+        let mut processed_line_count = 0;
+        for line in str.lines() {
+            // counts how many lines this loop has processed
+            processed_line_count += 1;
+
+            // chop off begining spaces
+            let (_leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
+
+            // remove comment notation if it exists
+            let (is_a_comment, space_after_comment_starter, line_no_comment_starter) =
+                remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
+
+            if is_a_comment && line_no_comment_starter.starts_with('<')
+                || line_no_comment_starter.starts_with('>')
+            {
+                let depth_option = count_and_remove_begining_whitespace(line);
+                let depth = match depth_option {
+                    Some(x) => x.0,
+                    None => 0,
+                };
+
+                let potential_space = if space_after_comment_starter { " " } else { "" };
+
+                lines_list.push(add_whitespace(
+                    &(comment_starter.to_owned()
+                        + potential_space
+                        + "_"
+                        + &line_no_comment_starter),
+                    depth,
+                    whitespace_char,
+                ));
+            } else {
+                if line_is_only_whitepace(line) {
+                    lines_list.push("".to_owned());
+                } else {
+                    lines_list.push(line.to_owned());
+                }
+            }
+        }
+
+        //> turn all lines into one string
+            let mut final_string = String::new();
+            for line in lines_list {
+                final_string.push_str(&line);
+                final_string.push('\n');
+            }
+        //<
+
+        // remove last '\n'
+        final_string.pop();
+
+        //> append any missed empty lines, as the .lines() function may have skipped them.
+            let line_diff = count_lines(str) - processed_line_count;
+
+            if line_diff > 0 {
+                for _ in 0..line_diff {
+                    final_string.push('\n');
+                }
+            }
+        //<
+
+        Some(final_string)
+    }
+
     fn count_lines(str: &str) -> usize {
         if str.is_empty() {
             return 0;
@@ -1081,6 +1189,46 @@ pub mod strfmt {
             Ok(x) => x,
             Err(err) => {
                 display_err(err, file);
+                return false;
+            }
+        };
+
+        //> write file
+            // leave file alone if there was no change
+            if converted != contents {
+                let mut output = match File::create(file) {
+                    Ok(x) => x,
+                    Err(_) => return false,
+                };
+
+                match write!(output, "{}", converted) {
+                    Ok(x) => x,
+                    Err(_) => return false,
+                };
+            }
+        //<
+
+        true
+    }
+
+    pub fn null_existing_brackets_file(file: PathBuf) -> bool {
+        let extenstion = match file.extension() {
+            Some(x) => match x.to_str() {
+                Some(x) => x,
+                None => return false,
+            },
+            None => return false,
+        };
+
+        let contents = match fs::read_to_string(&file) {
+            Ok(x) => x,
+            Err(_) => return false,
+        };
+
+        let converted = match null_existing_brackets(&contents, extenstion) {
+            Some(x) => x,
+            None => {
+                // display_err("err", file);
                 return false;
             }
         };

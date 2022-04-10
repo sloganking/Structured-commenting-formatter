@@ -67,6 +67,20 @@ OPTIONS:
             } else {
                 panic!("second arg must be a path or file");
             }
+        } else if flag == "null" || flag == "n" {
+            let dir = &args[2];
+            let path = PathBuf::from(dir);
+
+            if path.is_dir() {
+                let paths = strfmt::get_files_in_dir(dir, "");
+                for file in paths {
+                    strfmt::null_existing_brackets_file(file);
+                }
+            } else if path.is_file() {
+                strfmt::null_existing_brackets_file(path);
+            } else {
+                panic!("second arg must be a path or file");
+            }
         } else {
             panic!("Invalid flag passed as arg");
         }
