@@ -35,6 +35,24 @@ What will strfmt not do?
 **A:** Convincing all existing code formatter devs to support structured commenting, and maintaining support for all of those implementations would be difficult. Building one tool that supports multiple languages is much easier, and doesn't burden other developers with the technical debt of maintinaing support.
 
 
+## Noteworthy bugs
+
+- Per [issue #1](https://github.com/sloganking/Structured-commenting-formatter/issues/1), ``strfmt`` will mistake lines in multi-line strings or multi-line comments, as strucutred comments if those lines start with the comment starter. This means multi-line strings and comments such as the one below would get formatted.
+
+```rust
+/*
+//>
+comment line that will get indented after formatting
+//<
+*/
+
+let multi_line_str = "
+//>
+string line that will get indented after formatting
+//<
+"
+
+```
 
 
 
