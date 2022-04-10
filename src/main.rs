@@ -1,6 +1,7 @@
+use std::{env, path::PathBuf, sync::mpsc};
 use strfmt::strfmt;
-
-use std::{env, path::PathBuf};
+use threadpool::ThreadPool;
+extern crate num_cpus;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -26,10 +27,25 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
+                // format dirs
+
+                let pool = ThreadPool::new(num_cpus::get());
+                let (results_tx, results_rx) = mpsc::channel();
+
                 let paths = strfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    strfmt::format_file(file);
+                    let results_tx1 = results_tx.clone();
+                    pool.execute(move || {
+                        strfmt::format_file(file);
+                        results_tx1.send(()).unwrap();
+                    });
                 }
+
+                // drop the transmitter we didn't clone
+                drop(results_tx);
+
+                // wait for threads to finish before exiting
+                for _received in results_rx {}
             } else if path.is_file() {
                 strfmt::format_file(path);
             } else {

@@ -9,3 +9,5 @@ edition = "2021"
 glob = "0.3.0"
 colored = "2.0.0"
 phf = { version = "0.10.1", features = ["macros"] }
+threadpool = "1.8.1"
+num_cpus = "1.13.0"
