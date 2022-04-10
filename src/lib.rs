@@ -143,6 +143,12 @@ mod tests {
             let formatted = strfmt::format_str(&to_format, "rs").unwrap();
             assert_eq!(answer, formatted);
         }
+    //<> comment contents on closing brackets are preserved
+        #[test]
+        fn preserve_closing_comment_content() {
+            let formatted = strfmt::format_str("//>\n//< test", "rs").unwrap();
+            assert_eq!(formatted, "//>\n//<\n// test");
+        }
     //<
 }
 
@@ -330,7 +336,7 @@ pub mod strfmt {
         paths
     }
 
-    fn ensure_previous_lines_have_correct_whitespace(
+    fn ensure_previous_lines_have_correct_indentation(
         formatted_lines: &mut Vec<String>,
         comment_tracker: &mut Vec<CommentDetail>,
         tab_spaces: usize,
@@ -422,10 +428,9 @@ pub mod strfmt {
                 remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
 
             //> apply whitespace depth
-                let formatted_line;
 
                 if is_a_comment & line_no_leading_spaces.starts_with('>') {
-                    formatted_line = line.to_string();
+                    formatted_lines.push(line.to_string() + "\n");
 
                     //> add comment to comment tracker
                         let comment = CommentDetail {
@@ -439,18 +444,18 @@ pub mod strfmt {
                         return Err((i + 1, "<> closed nothing".to_owned()));
                     }
 
-                    ensure_previous_lines_have_correct_whitespace(
+                    ensure_previous_lines_have_correct_indentation(
                         &mut formatted_lines,
                         &mut comment_tracker,
                         tab_spaces,
                         whitespace_char,
                     );
 
-                    formatted_line = set_whitespace(
+                    formatted_lines.push(set_whitespace(
                         line,
                         comment_tracker[comment_tracker.len() - 1].depth,
                         whitespace_char,
-                    );
+                    ) + "\n");
 
                     //> remove and add comment to comment tracker
                         let comment = CommentDetail {
@@ -465,31 +470,44 @@ pub mod strfmt {
                         return Err((i + 1, "< closed nothing".to_owned()));
                     }
 
-                    ensure_previous_lines_have_correct_whitespace(
+                    ensure_previous_lines_have_correct_indentation(
                         &mut formatted_lines,
                         &mut comment_tracker,
                         tab_spaces,
                         whitespace_char,
                     );
 
-                    formatted_line = set_whitespace(
-                        line,
-                        comment_tracker[comment_tracker.len() - 1].depth,
-                        whitespace_char,
-                    );
+                    //> close comment
+                        formatted_lines.push(set_whitespace(
+                            &(comment_starter.to_owned() + "<\n"),
+                            comment_tracker[comment_tracker.len() - 1].depth,
+                            whitespace_char,
+                        ));
+
+                    //<> move any text after //< to comment on next line
+                        // remove bracket from line
+                        let comment_contents = &line_no_leading_spaces[1..];
+
+                        if !line_is_only_whitepace(comment_contents) {
+                            formatted_lines.push(set_whitespace(
+                                &(comment_starter.to_owned() + comment_contents + "\n"),
+                                comment_tracker[comment_tracker.len() - 1].depth,
+                                whitespace_char,
+                            ));
+                        }
+                    //<
 
                     // remove comment from comment tracker
                     comment_tracker.pop();
                 } else {
                     if leading_spaces != None {
-                        formatted_line = line.to_string();
+                        formatted_lines.push(line.to_string() + "\n");
                     } else {
                         // all whitespace only lines are set to depth 0
-                        formatted_line = "".to_string();
+                        formatted_lines.push("\n".to_string());
                     }
                 }
             //<
-            formatted_lines.push(formatted_line + "\n");
         }
 
         //> turn all lines into one string
