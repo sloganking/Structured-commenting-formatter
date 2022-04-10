@@ -149,6 +149,12 @@ mod tests {
             let formatted = strfmt::format_str("//>\n//< test", "rs").unwrap();
             assert_eq!(formatted, "//>\n//<\n// test");
         }
+
+        #[test]
+        fn preserve_closing_comment_content_and_spacing() {
+            let formatted = strfmt::format_str("//>\n// < test", "rs").unwrap();
+            assert_eq!(formatted, "//>\n// <\n// test");
+        }
     //<
 }
 
@@ -392,19 +398,22 @@ pub mod strfmt {
         (leading_spaces, line_no_leading_spaces)
     }
 
-    fn remove_comment_notation_if_it_exists(line: &str, comment_starter: &str) -> (bool, String) {
+    fn remove_comment_notation_if_it_exists(line: &str, comment_starter: &str) -> (bool, bool, String) {
         let mut line_no_comment_starter = line;
         let comment_starter_with_space = comment_starter.to_owned() + " ";
         let mut is_a_comment = false;
+        let mut space_after_comment_starter = false;
         if line_no_comment_starter.starts_with(&comment_starter_with_space) {
             is_a_comment = true;
+            space_after_comment_starter = true;
             line_no_comment_starter = &line_no_comment_starter[comment_starter.len() + 1..];
         } else if line_no_comment_starter.starts_with(comment_starter) {
             is_a_comment = true;
+            space_after_comment_starter = false;
             line_no_comment_starter = &line_no_comment_starter[comment_starter.len()..];
         }
 
-        (is_a_comment, line_no_comment_starter.to_owned())
+        (is_a_comment, space_after_comment_starter, line_no_comment_starter.to_owned())
     }
 
     pub fn format_str(str: &str, filetype: &str) -> Result<String, (usize, String)> {
@@ -424,12 +433,11 @@ pub mod strfmt {
             let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
             // remove comment notation if it exists
-            let (is_a_comment, line_no_leading_spaces) =
+            let (is_a_comment, space_after_comment_starter, line_no_comment_starter) =
                 remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
 
             //> apply whitespace depth
-
-                if is_a_comment & line_no_leading_spaces.starts_with('>') {
+                if is_a_comment & line_no_comment_starter.starts_with('>') {
                     formatted_lines.push(line.to_string() + "\n");
 
                     //> add comment to comment tracker
@@ -439,7 +447,7 @@ pub mod strfmt {
                         };
                         comment_tracker.push(comment);
                     //<
-                } else if is_a_comment & line_no_leading_spaces.starts_with("<>") {
+                } else if is_a_comment & line_no_comment_starter.starts_with("<>") {
                     if comment_tracker.is_empty() {
                         return Err((i + 1, "<> closed nothing".to_owned()));
                     }
@@ -465,7 +473,7 @@ pub mod strfmt {
                         comment_tracker.pop();
                         comment_tracker.push(comment);
                     //<
-                } else if is_a_comment & line_no_leading_spaces.starts_with('<') {
+                } else if is_a_comment & line_no_comment_starter.starts_with('<') {
                     if comment_tracker.is_empty() {
                         return Err((i + 1, "< closed nothing".to_owned()));
                     }
@@ -478,15 +486,21 @@ pub mod strfmt {
                     );
 
                     //> close comment
+                        let possible_space = if space_after_comment_starter{
+                            " "
+                        }else{
+                            ""
+                        };
+
                         formatted_lines.push(set_whitespace(
-                            &(comment_starter.to_owned() + "<\n"),
+                            &(comment_starter.to_owned() + possible_space + "<\n"),
                             comment_tracker[comment_tracker.len() - 1].depth,
                             whitespace_char,
                         ));
 
                     //<> move any text after //< to comment on next line
                         // remove bracket from line
-                        let comment_contents = &line_no_leading_spaces[1..];
+                        let comment_contents = &line_no_comment_starter[1..];
 
                         if !line_is_only_whitepace(comment_contents) {
                             formatted_lines.push(set_whitespace(
@@ -634,7 +648,7 @@ pub mod strfmt {
         let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
         // remove comment notation if it exists
-        let (is_a_comment, _line_no_comment_starter) =
+        let (is_a_comment, _, _line_no_comment_starter) =
             remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
 
         if !is_a_comment {
@@ -652,7 +666,7 @@ pub mod strfmt {
         let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
         // remove comment notation if it exists
-        let (is_a_comment, _line_no_comment_starter) =
+        let (is_a_comment, _, _line_no_comment_starter) =
             remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
 
         if !is_a_comment {
@@ -781,7 +795,7 @@ pub mod strfmt {
                     chop_off_beginning_spaces(line_before_open_bracket_comment);
 
                 // remove comment notation if it exists
-                let (is_a_comment, line_no_comment_opener) =
+                let (is_a_comment, _, line_no_comment_opener) =
                     remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
 
                 let latest_comment =
@@ -868,7 +882,7 @@ pub mod strfmt {
             // chop off begining spaces
             let (leading_spaces, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
-            let (is_a_comment, _) =
+            let (is_a_comment, _, _) =
                 remove_comment_notation_if_it_exists(line_no_leading_spaces, comment_starter);
 
             match leading_spaces {
