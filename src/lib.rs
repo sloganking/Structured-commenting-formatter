@@ -192,6 +192,8 @@ pub mod strfmt {
         "go" => "//",
         "graphql" => "#",
         "groovy" => "//",
+        // C header files
+        "h" => "//",
         //> Haskell
             "hs" => "--",
             "lhs" => "--",
@@ -1183,8 +1185,6 @@ pub mod strfmt {
                 lines_list.push("\n".to_owned());
             }
         }
-
-        // remove_empty_tail(&mut lines_list);
 
         //> turn all lines into one string
             for line in lines_list {
