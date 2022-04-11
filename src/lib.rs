@@ -586,7 +586,7 @@ pub mod strfmt {
 
     fn display_err(err: (usize, String), file: PathBuf) {
         if err.1 != "Incompatible file type" {
-            println!("{}: {}", "Error".red().bold(), err.1);
+            println!("{}: {}", "error".red().bold(), err.1);
             println!(
                 "{}",
                 file.as_os_str().to_str().unwrap().to_owned() + ":" + &format!("{}", err.0)

@@ -1,12 +1,17 @@
+use colored::Colorize;
+use std::{env, path::PathBuf};
 use strfmt::strfmt;
 
-use std::{env, path::PathBuf};
+fn print_err(err: &str) {
+    println!("{}: {}", "error".red().bold(), err);
+}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() == 1 {
-        panic!("strfmt was passed too few arguments");
+        print_err("strfmt was passed too few arguments");
+        return;
     } else if args.len() == 2 {
         let dir = &args[1];
 
@@ -20,7 +25,8 @@ USAGE:
 OPTIONS:
     *None*                      Passing no option simply formats bracketed structured comments
     ab, add_brackets            Gives brackets to any bracketless strucutered comments
-    rb, remove_brackets         Removes brackets from any bracketed structured comments"
+    rb, remove_brackets         Removes brackets from any bracketed structured comments
+    n,  null                    Invalidates any existing bracketed comments, while preserving their content"
             )
         } else {
             let path = PathBuf::from(dir);
@@ -33,7 +39,8 @@ OPTIONS:
             } else if path.is_file() {
                 strfmt::format_file(path);
             } else {
-                panic!("arg must be a file, path, or command")
+                print_err("arg must be a file, path, or command");
+                return;
             }
         }
     } else if args.len() == 3 {
@@ -51,7 +58,8 @@ OPTIONS:
             } else if path.is_file() {
                 strfmt::add_brackets_file(path);
             } else {
-                panic!("second arg must be a path or file");
+                print_err("second arg must be a path or file");
+                return;
             }
         } else if flag == "remove_brackets" || flag == "rb" {
             let dir = &args[2];
@@ -65,7 +73,8 @@ OPTIONS:
             } else if path.is_file() {
                 strfmt::remove_brackets_file(path);
             } else {
-                panic!("second arg must be a path or file");
+                print_err("second arg must be a path or file");
+                return;
             }
         } else if flag == "null" || flag == "n" {
             let dir = &args[2];
@@ -79,12 +88,15 @@ OPTIONS:
             } else if path.is_file() {
                 strfmt::null_existing_brackets_file(path);
             } else {
-                panic!("second arg must be a path or file");
+                print_err("second arg must be a path or file");
+                return;
             }
         } else {
-            panic!("Invalid flag passed as arg");
+            print_err("Invalid flag passed as arg");
+            return;
         }
     } else {
-        panic!("strfmt was passed too many arguments");
+        print_err("strfmt was passed too many arguments");
+        return;
     }
 }
