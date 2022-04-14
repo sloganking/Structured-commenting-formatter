@@ -1,11 +1,11 @@
 # Structured commenting formatter
 
-``strfmt`` is a formatter designed to enable [structured commenting](https://github.com/sloganking/Structured-Commenting) in your code. Running ``strfmt`` after traditional code formatters, will ensure your structured comments are indented correctly and not mangled.
+``scfmt`` is a formatter designed to enable [structured commenting](https://github.com/sloganking/Structured-Commenting) in your code. Running ``scfmt`` after traditional code formatters, will ensure your structured comments are indented correctly and not mangled.
 
 ## Features
 
 ### Formatting
-``strfmt`` will format strings with bracketed structured comments, so that their contents inside them are correctly indented.
+``scfmt`` will format strings with bracketed structured comments, so that their contents inside them are correctly indented.
 
 ### Adding Brackets
 Adding brackets converts the bracketless method of structured commenting to the bracketed version. Strucutred comments must be bracketed before being run through the formatter, or else no change will take effect.
@@ -14,15 +14,15 @@ Adding brackets converts the bracketless method of structured commenting to the 
 Removing brackets converts the bracketed method of structured commenting to the bracketless version. Bracketless structured comments are less verbose, but have no method of being recovered if their whitespace gets messed up. Say after running them through a traditional code formatter.
 
 
-## What is strfmt allowed to do?
+## What is scfmt allowed to do?
 
-The only things ``strfmt`` is allowed to do is: 
+The only things ``scfmt`` is allowed to do is: 
 - Create and delete ``//<`` closing comments
 - Add and remove brackets ``>``, ``<>`` to the begining of existing comments.
 - Ensure empty lines are depth 0
 - Edit the indentation of lines for SC formatting.
 
-What will strfmt not do?
+What will scfmt not do?
 - Turn one line into many
 - Turn many lines into one
 - Ensure a ``max_width``
@@ -37,7 +37,7 @@ What will strfmt not do?
 
 ## Noteworthy bugs
 
-- Per [issue #1](https://github.com/sloganking/Structured-commenting-formatter/issues/1), ``strfmt`` will mistake lines in multi-line strings or multi-line comments, as strucutred comments if those lines start with the comment starter. This means multi-line strings and comments such as the one below would get formatted.
+- Per [issue #1](https://github.com/sloganking/Structured-commenting-formatter/issues/1), ``scfmt`` will mistake lines in multi-line strings or multi-line comments, as strucutred comments if those lines start with the comment starter. This means multi-line strings and comments such as the one below would get formatted.
 
 ```rust
 /*
