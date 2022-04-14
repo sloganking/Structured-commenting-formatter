@@ -1,6 +1,6 @@
 use colored::Colorize;
+use scfmt::scfmt;
 use std::{env, path::PathBuf};
-use strfmt::strfmt;
 
 fn print_err(err: &str) {
     println!("{}: {}", "error".red().bold(), err);
@@ -10,14 +10,14 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() == 1 {
-        print_err("strfmt was passed too few arguments");
+        print_err("scfmt was passed too few arguments");
         return;
     } else if args.len() == 2 {
         let dir = &args[1];
 
         if dir == "help" {
             println!(
-                "strfmt - structured commenting formatter
+"scfmt - structured commenting formatter
 
 USAGE:
     [OPTIONS] [DIRECTORY]
@@ -32,12 +32,12 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
-                let paths = strfmt::get_files_in_dir(dir, "");
+                let paths = scfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    strfmt::format_file(file);
+                    scfmt::format_file(file);
                 }
             } else if path.is_file() {
-                strfmt::format_file(path);
+                scfmt::format_file(path);
             } else {
                 print_err("arg must be a file, path, or command");
                 return;
@@ -51,12 +51,12 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
-                let paths = strfmt::get_files_in_dir(dir, "");
+                let paths = scfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    strfmt::add_brackets_file(file);
+                    scfmt::add_brackets_file(file);
                 }
             } else if path.is_file() {
-                strfmt::add_brackets_file(path);
+                scfmt::add_brackets_file(path);
             } else {
                 print_err("second arg must be a path or file");
                 return;
@@ -66,12 +66,12 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
-                let paths = strfmt::get_files_in_dir(dir, "");
+                let paths = scfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    strfmt::remove_brackets_file(file);
+                    scfmt::remove_brackets_file(file);
                 }
             } else if path.is_file() {
-                strfmt::remove_brackets_file(path);
+                scfmt::remove_brackets_file(path);
             } else {
                 print_err("second arg must be a path or file");
                 return;
@@ -81,12 +81,12 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
-                let paths = strfmt::get_files_in_dir(dir, "");
+                let paths = scfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    strfmt::null_existing_brackets_file(file);
+                    scfmt::null_existing_brackets_file(file);
                 }
             } else if path.is_file() {
-                strfmt::null_existing_brackets_file(path);
+                scfmt::null_existing_brackets_file(path);
             } else {
                 print_err("second arg must be a path or file");
                 return;
@@ -96,7 +96,7 @@ OPTIONS:
             return;
         }
     } else {
-        print_err("strfmt was passed too many arguments");
+        print_err("scfmt was passed too many arguments");
         return;
     }
 }

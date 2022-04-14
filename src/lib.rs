@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::strfmt;
+    use crate::scfmt;
     use std::fs;
 
     //> basic tests
@@ -8,7 +8,7 @@ mod tests {
         fn format_str() {
             let to_format = fs::read_to_string("./test_resources/1_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/1_answer.rs").unwrap();
-            let formatted = strfmt::format_str(&to_format, "rs").unwrap();
+            let formatted = scfmt::format_str(&to_format, "rs").unwrap();
             assert_eq!(answer, formatted);
         }
 
@@ -16,7 +16,7 @@ mod tests {
         fn add_brackets() {
             let to_format = fs::read_to_string("./test_resources/2_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/2_answer.rs").unwrap();
-            let formatted = strfmt::add_brackets(&to_format, "rs").unwrap();
+            let formatted = scfmt::add_brackets(&to_format, "rs").unwrap();
             assert_eq!(answer, formatted);
         }
 
@@ -24,14 +24,14 @@ mod tests {
         fn remove_brackets() {
             let to_format = fs::read_to_string("./test_resources/3_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/3_answer.rs").unwrap();
-            let formatted = strfmt::remove_brackets(&to_format, "rs").unwrap();
+            let formatted = scfmt::remove_brackets(&to_format, "rs").unwrap();
             assert_eq!(answer, formatted);
         }
 
         #[test]
         fn no_change_without_brackets() {
             let before_formatting = fs::read_to_string("./test_resources/4_test.rs").unwrap();
-            let formatted = strfmt::format_str(&before_formatting, "rs").unwrap();
+            let formatted = scfmt::format_str(&before_formatting, "rs").unwrap();
             assert_eq!(formatted, before_formatting);
         }
 
@@ -39,21 +39,21 @@ mod tests {
         #[test]
         fn no_head_for_closing() {
             let before_formatting = fs::read_to_string("./test_resources/5_test.rs").unwrap();
-            let formatted = strfmt::format_str(&before_formatting, "rs");
+            let formatted = scfmt::format_str(&before_formatting, "rs");
             assert_eq!(formatted, Err((46, "< closed nothing".to_owned())));
         }
 
         #[test]
         fn no_head_for_middle() {
             let before_formatting = fs::read_to_string("./test_resources/6_test.rs").unwrap();
-            let formatted = strfmt::format_str(&before_formatting, "rs");
+            let formatted = scfmt::format_str(&before_formatting, "rs");
             assert_eq!(formatted, Err((21, "<> closed nothing".to_owned())));
         }
 
         #[test]
         fn head_never_closed() {
             let before_formatting = fs::read_to_string("./test_resources/7_test.rs").unwrap();
-            let formatted = strfmt::format_str(&before_formatting, "rs");
+            let formatted = scfmt::format_str(&before_formatting, "rs");
             assert_eq!(formatted, Err((1, "unclosed comment".to_owned())));
         }
 
@@ -61,22 +61,22 @@ mod tests {
         #[test]
         fn format_preserves_ending_empty_lines() {
             //> empty input
-                let formatted = strfmt::format_str("", "rs").unwrap();
+                let formatted = scfmt::format_str("", "rs").unwrap();
                 assert_eq!(formatted, "");
             //<> 0 empty ending lines
-                let formatted = strfmt::format_str("//>\n//<", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<", "rs").unwrap();
                 assert_eq!(formatted, "//>\n//<");
             //<> 1 empty ending lines
-                let formatted = strfmt::format_str("//>\n//<\n", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<\n", "rs").unwrap();
                 assert_eq!(formatted, "//>\n//<\n");
             //<> 2 empty ending lines
-                let formatted = strfmt::format_str("//>\n//<\n\n", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<\n\n", "rs").unwrap();
                 assert_eq!(formatted, "//>\n//<\n\n");
             //<> 3 empty ending lines
-                let formatted = strfmt::format_str("//>\n//<\n\n\n", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<\n\n\n", "rs").unwrap();
                 assert_eq!(formatted, "//>\n//<\n\n\n");
             //<> 3 empty ending lines with space on last line
-                let formatted = strfmt::format_str("//>\n//<\n\n\n ", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<\n\n\n ", "rs").unwrap();
                 assert_eq!(formatted, "//>\n//<\n\n\n");
             //<
         }
@@ -84,22 +84,22 @@ mod tests {
         #[test]
         fn remove_brackets_preserves_ending_empty_lines() {
             //> empty input
-                let formatted = strfmt::remove_brackets("", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("", "rs").unwrap();
                 assert_eq!(formatted, "");
             //<> 0 empty ending lines
-                let formatted = strfmt::remove_brackets("//>\n    let a = 0;\n//<", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<", "rs").unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;");
             //<> 1 empty ending lines
-                let formatted = strfmt::remove_brackets("//>\n    let a = 0;\n//<\n", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n", "rs").unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;\n");
             //<> 2 empty ending lines
-                let formatted = strfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n", "rs").unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;\n\n");
             //<> 3 empty ending lines
-                let formatted = strfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n\n", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n\n", "rs").unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;\n\n\n");
             //<> 3 empty ending lines with space on last line
-                let formatted = strfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n\n ", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n\n ", "rs").unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;\n\n\n");
             //<
         }
@@ -107,22 +107,22 @@ mod tests {
         #[test]
         fn add_brackets_preserves_ending_empty_lines() {
             //> empty input
-                let formatted = strfmt::add_brackets("", "rs").unwrap();
+                let formatted = scfmt::add_brackets("", "rs").unwrap();
                 assert_eq!(formatted, "");
             //<> 0 empty ending lines
-                let formatted = strfmt::add_brackets("//\n    let a = 0;", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;", "rs").unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<");
             //<> 1 empty ending lines
-                let formatted = strfmt::add_brackets("//\n    let a = 0;\n", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;\n", "rs").unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<\n");
             //<> 2 empty ending lines
-                let formatted = strfmt::add_brackets("//\n    let a = 0;\n\n", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n", "rs").unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<\n\n");
             //<> 3 empty ending lines
-                let formatted = strfmt::add_brackets("//\n    let a = 0;\n\n\n", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n\n", "rs").unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<\n\n\n");
             //<> 3 empty ending lines with space at end
-                let formatted = strfmt::add_brackets("//\n    let a = 0;\n\n\n ", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n\n ", "rs").unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<\n\n\n");
             //<
         }
@@ -130,22 +130,22 @@ mod tests {
         #[test]
         fn null_brackets_preserves_ending_empty_lines() {
             //> empty input
-                let formatted = strfmt::null_existing_brackets("", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("", "rs").unwrap();
                 assert_eq!(formatted, "");
             //<> 0 empty ending lines
-                let formatted = strfmt::null_existing_brackets("//>\n//<", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<", "rs").unwrap();
                 assert_eq!(formatted, "//_>\n//_<");
             //<> 1 empty ending lines
-                let formatted = strfmt::null_existing_brackets("//>\n//<\n", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<\n", "rs").unwrap();
                 assert_eq!(formatted, "//_>\n//_<\n");
             //<> 2 empty ending lines
-                let formatted = strfmt::null_existing_brackets("//>\n//<\n\n", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n", "rs").unwrap();
                 assert_eq!(formatted, "//_>\n//_<\n\n");
             //<> 3 empty ending lines
-                let formatted = strfmt::null_existing_brackets("//>\n//<\n\n\n", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n\n", "rs").unwrap();
                 assert_eq!(formatted, "//_>\n//_<\n\n\n");
             //<> 3 empty ending lines with space at end
-                let formatted = strfmt::null_existing_brackets("//>\n//<\n\n\n ", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n\n ", "rs").unwrap();
                 assert_eq!(formatted, "//_>\n//_<\n\n\n");
             //<
         }
@@ -155,7 +155,7 @@ mod tests {
         fn format_str_tabs() {
             let to_format = fs::read_to_string("./test_resources/9_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/9_answer.rs").unwrap();
-            let formatted = strfmt::format_str(&to_format, "rs").unwrap();
+            let formatted = scfmt::format_str(&to_format, "rs").unwrap();
             assert_eq!(answer, formatted);
         }
     //<> tab_depth of 2 (two spaces per indent)
@@ -163,32 +163,32 @@ mod tests {
         fn format_str_tab_depth_of_2() {
             let to_format = fs::read_to_string("./test_resources/10_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/10_answer.rs").unwrap();
-            let formatted = strfmt::format_str(&to_format, "rs").unwrap();
+            let formatted = scfmt::format_str(&to_format, "rs").unwrap();
             assert_eq!(answer, formatted);
         }
     //<> comment contents on closing brackets are preserved
         #[test]
         fn preserve_closing_comment_content() {
-            let formatted = strfmt::format_str("//>\n//< test", "rs").unwrap();
+            let formatted = scfmt::format_str("//>\n//< test", "rs").unwrap();
             assert_eq!(formatted, "//>\n//<\n// test");
         }
 
         #[test]
         fn preserve_closing_comment_content_and_spacing() {
-            let formatted = strfmt::format_str("//>\n// < test", "rs").unwrap();
+            let formatted = scfmt::format_str("//>\n// < test", "rs").unwrap();
             assert_eq!(formatted, "//>\n// <\n// test");
         }
     //<> nullify brackets
         #[test]
         fn nullify_brackets() {
             let formatted =
-                strfmt::null_existing_brackets("//>\n    //>\n//\n    //<\n//<", "rs").unwrap();
+                scfmt::null_existing_brackets("//>\n    //>\n//\n    //<\n//<", "rs").unwrap();
             assert_eq!(formatted, "//_>\n    //_>\n//\n    //_<\n//_<");
         }
     //<
 }
 
-pub mod strfmt {
+pub mod scfmt {
 
     use colored::*;
     use glob::glob;
