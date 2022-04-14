@@ -1,6 +1,11 @@
 # Structured commenting formatter (scfmt)
 
-``scfmt`` is a formatter designed to enable [structured commenting](https://github.com/sloganking/Structured-Commenting) in your code. Running ``scfmt`` after traditional code formatters, will ensure your structured comments are indented correctly and not mangled.
+``scfmt`` is a formatter designed to enable [structured commenting](https://github.com/sloganking/Structured-Commenting) in your code. Running ``scfmt`` after traditional code formatters, will ensure your structured comments are indented correctly and not mangled. This repository provides both a CLI for quickly formatting files, and a rust library for adding scfmt support to other projects.
+
+## Quick Links
+
+[FAQ](./FAQ.md)
+
 
 ## Features
 
@@ -19,7 +24,7 @@ Nullifying brackets puts a ``_`` character in front of any existing bracketed co
 
 ## What is scfmt allowed to do?
 
-The only things ``scfmt`` is allowed to do is: 
+The only things ``scfmt`` is allowed to do are: 
 - Create and delete ``//<`` closing comments
 - Add and remove brackets ``>``, ``<>`` to the begining of existing comments.
 - Ensure empty lines are depth 0
@@ -31,16 +36,9 @@ What will scfmt not do?
 - Ensure a ``max_width``
 - Add or remove empty lines
 
-## FAQ
-
-**Q:** Why not bake structured comments support into existing code formatters, instead of making this third party tool?
-
-**A:** Convincing all existing code formatter devs to support structured commenting, and maintaining support for all of those implementations would be difficult. Building one tool that supports multiple languages is much easier, and doesn't burden other developers with the technical debt of maintinaing support.
-
-
 ## Noteworthy bugs
 
-- Per [issue #1](https://github.com/sloganking/Structured-commenting-formatter/issues/1), ``scfmt`` will mistake lines in multi-line strings or multi-line comments, as strucutred comments if those lines start with the comment starter. This means multi-line strings and comments such as the one below would get formatted.
+- Per [issue #1](https://github.com/sloganking/Structured-commenting-formatter/issues/1), ``scfmt`` will mistake lines in multi-line strings or multi-line comments, as strucutred comments if those lines start with your language's comment starter. This means multi-line strings and comments such as the one below would get formatted, even though they should not be.
 
 ```rust
 /*
