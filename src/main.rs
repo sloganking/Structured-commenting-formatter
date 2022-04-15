@@ -8,7 +8,7 @@ fn print_err(err: &str) {
 
 fn display_if_err(err_result: Result<(), (usize, String)>, file: PathBuf) {
     if let Err(err) = err_result {
-        if err.1 != "Incompatible file type" {
+        if err.1 != "Incompatible file type" && err.1 != "Cannot determine file extension" {
             println!("{}: {}", "error".red().bold(), err.1);
             println!(
                 "{}",
