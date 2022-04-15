@@ -10,9 +10,13 @@ fn display_if_err(err_result: Result<(), (usize, String)>, file: PathBuf) {
     if let Err(err) = err_result {
         if err.1 != "Incompatible file type" && err.1 != "Cannot determine file extension" {
             println!("{}: {}", "error".red().bold(), err.1);
+            let mut line_string = "".to_owned();
+            if err.0 != 0{
+                line_string = ":".to_owned() + &format!("{}", err.0)
+            }
             println!(
                 "{}",
-                file.as_os_str().to_str().unwrap().to_owned() + ":" + &format!("{}", err.0)
+                file.as_os_str().to_str().unwrap().to_owned() + &line_string
             );
         }
     }
