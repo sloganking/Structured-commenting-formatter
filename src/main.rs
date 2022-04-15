@@ -69,10 +69,7 @@ OPTIONS:
                     );
                 }
             } else if path.is_file() {
-                display_if_err(
-                    scfmt::add_brackets_file(path.to_path_buf()),
-                    path,
-                );
+                display_if_err(scfmt::add_brackets_file(path.to_path_buf()), path);
             } else {
                 print_err("second arg must be a path or file");
             }
@@ -89,10 +86,7 @@ OPTIONS:
                     );
                 }
             } else if path.is_file() {
-                display_if_err(
-                    scfmt::remove_brackets_file(path.to_path_buf()),
-                    path,
-                );
+                display_if_err(scfmt::remove_brackets_file(path.to_path_buf()), path);
             } else {
                 print_err("second arg must be a path or file");
             }
