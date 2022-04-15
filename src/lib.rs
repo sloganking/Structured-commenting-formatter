@@ -547,14 +547,13 @@ pub mod scfmt {
 
                     // remove comment from comment tracker
                     comment_tracker.pop();
+                } else if leading_spaces != None {
+                    formatted_lines.push(line.to_string() + "\n");
                 } else {
-                    if leading_spaces != None {
-                        formatted_lines.push(line.to_string() + "\n");
-                    } else {
-                        // all whitespace only lines are set to depth 0
-                        formatted_lines.push("\n".to_string());
-                    }
+                    // all whitespace only lines are set to depth 0
+                    formatted_lines.push("\n".to_string());
                 }
+
             //<
         }
 
@@ -763,12 +762,9 @@ pub mod scfmt {
         // chop off begining spaces
         let (leading_whitespace_option, line_no_leading_spaces) = chop_off_beginning_spaces(line);
 
-        match leading_whitespace_option {
-            Some(num_leading_whitespace) => {
-                Some((num_leading_whitespace, line_no_leading_spaces.to_owned()))
-            }
-            None => None,
-        }
+        leading_whitespace_option.map(|num_leading_whitespace| {
+            (num_leading_whitespace, line_no_leading_spaces.to_owned())
+        })
     }
 
     fn last_non_empty_line_before_index(
@@ -1101,12 +1097,10 @@ pub mod scfmt {
                     depth,
                     whitespace_char,
                 ));
+            } else if line_is_only_whitepace(line) {
+                lines_list.push("".to_owned());
             } else {
-                if line_is_only_whitepace(line) {
-                    lines_list.push("".to_owned());
-                } else {
-                    lines_list.push(line.to_owned());
-                }
+                lines_list.push(line.to_owned());
             }
         }
 
@@ -1246,8 +1240,8 @@ pub mod scfmt {
                 let comment_starter_with_space = comment_starter.to_owned() + " ";
                 if str.starts_with(&comment_starter_with_space) {
                     line_no_comment_starter = &str[comment_starter.len() + 1..];
-                } else if str.starts_with(comment_starter) {
-                    line_no_comment_starter = &str[comment_starter.len()..];
+                } else if let Some(stripped) = str.strip_prefix(comment_starter) {
+                    line_no_comment_starter = stripped;
                 }
 
                 line_no_comment_starter.to_string()
@@ -1306,18 +1300,19 @@ pub mod scfmt {
                     let line_no_comment_starter =
                         remove_comment_starter(line_no_leading_whitespace, comment_starter);
 
-                    if line_no_comment_starter.starts_with("<>") {
+                    if let Some(line_no_brackets) = line_no_comment_starter.strip_prefix("<>") {
                         lines_list.push(
                             add_whitespace(
-                                &(comment_starter.to_owned() + &line_no_comment_starter[2..]),
+                                &(comment_starter.to_owned() + line_no_brackets),
                                 leading_whitespace,
                                 whitespace_char,
                             ) + "\n",
                         );
-                    } else if line_no_comment_starter.starts_with('>') {
+                    } else if let Some(line_no_brackets) = line_no_comment_starter.strip_prefix('>')
+                    {
                         lines_list.push(
                             add_whitespace(
-                                &(comment_starter.to_owned() + &line_no_comment_starter[1..]),
+                                &(comment_starter.to_owned() + line_no_brackets),
                                 leading_whitespace,
                                 whitespace_char,
                             ) + "\n",
