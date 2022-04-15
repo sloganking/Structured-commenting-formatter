@@ -6,12 +6,23 @@ fn print_err(err: &str) {
     println!("{}: {}", "error".red().bold(), err);
 }
 
+fn display_if_err(err_result: Result<(), (usize, String)>, file: PathBuf) {
+    if let Err(err) = err_result {
+        if err.1 != "Incompatible file type" {
+            println!("{}: {}", "error".red().bold(), err.1);
+            println!(
+                "{}",
+                file.as_os_str().to_str().unwrap().to_owned() + ":" + &format!("{}", err.0)
+            );
+        }
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() == 1 {
         print_err("scfmt was passed too few arguments");
-        return;
     } else if args.len() == 2 {
         let dir = &args[1];
 
@@ -34,13 +45,12 @@ OPTIONS:
             if path.is_dir() {
                 let paths = scfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    scfmt::format_file(file);
+                    display_if_err(scfmt::format_file(file.to_path_buf()), file.to_path_buf());
                 }
             } else if path.is_file() {
-                scfmt::format_file(path);
+                display_if_err(scfmt::format_file(path.to_path_buf()), path);
             } else {
                 print_err("arg must be a file, path, or command");
-                return;
             }
         }
     } else if args.len() == 3 {
@@ -53,13 +63,18 @@ OPTIONS:
             if path.is_dir() {
                 let paths = scfmt::get_files_in_dir(dir, "");
                 for file in paths {
-                    scfmt::add_brackets_file(file);
+                    display_if_err(
+                        scfmt::add_brackets_file(file.to_path_buf()),
+                        file.to_path_buf(),
+                    );
                 }
             } else if path.is_file() {
-                scfmt::add_brackets_file(path);
+                display_if_err(
+                    scfmt::add_brackets_file(path.to_path_buf()),
+                    path,
+                );
             } else {
                 print_err("second arg must be a path or file");
-                return;
             }
         } else if flag == "remove_brackets" || flag == "rb" {
             let dir = &args[2];
@@ -67,14 +82,19 @@ OPTIONS:
 
             if path.is_dir() {
                 let paths = scfmt::get_files_in_dir(dir, "");
-                for file in paths {
-                    scfmt::remove_brackets_file(file);
+                for file in &paths {
+                    display_if_err(
+                        scfmt::remove_brackets_file(file.to_path_buf()),
+                        file.to_path_buf(),
+                    );
                 }
             } else if path.is_file() {
-                scfmt::remove_brackets_file(path);
+                display_if_err(
+                    scfmt::remove_brackets_file(path.to_path_buf()),
+                    path,
+                );
             } else {
                 print_err("second arg must be a path or file");
-                return;
             }
         } else if flag == "null" || flag == "n" {
             let dir = &args[2];
@@ -89,14 +109,11 @@ OPTIONS:
                 scfmt::null_existing_brackets_file(path);
             } else {
                 print_err("second arg must be a path or file");
-                return;
             }
         } else {
             print_err("Invalid flag passed as arg");
-            return;
         }
     } else {
         print_err("scfmt was passed too many arguments");
-        return;
     }
 }

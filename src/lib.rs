@@ -190,7 +190,6 @@ mod tests {
 
 pub mod scfmt {
 
-    use colored::*;
     use glob::glob;
     use phf::phf_map;
     use std::fs;
@@ -373,8 +372,8 @@ pub mod scfmt {
     }
 
     fn ensure_previous_lines_have_correct_indentation(
-        formatted_lines: &mut Vec<String>,
-        comment_tracker: &mut Vec<CommentDetail>,
+        formatted_lines: &mut [String],
+        comment_tracker: &mut [CommentDetail],
         tab_spaces: usize,
         whitespace_char: char,
     ) {
@@ -584,94 +583,72 @@ pub mod scfmt {
         Ok(formatted_file)
     }
 
-    fn display_err(err: (usize, String), file: PathBuf) {
-        if err.1 != "Incompatible file type" {
-            println!("{}: {}", "error".red().bold(), err.1);
-            println!(
-                "{}",
-                file.as_os_str().to_str().unwrap().to_owned() + ":" + &format!("{}", err.0)
-            );
-        }
-    }
-
-    pub fn format_file(file: PathBuf) -> bool {
+    pub fn format_file(file: PathBuf) -> Result<(), (usize, String)> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
-                None => return false,
+                None => return Err((0, "Cannot convert OS String to displayable".to_owned())),
             },
-            None => return false,
+            None => return Err((0, "Cannot determine file extension".to_owned())),
         };
 
         let contents = match fs::read_to_string(&file) {
             Ok(x) => x,
-            Err(_) => return false,
+            Err(_) => return Err((0, "Cannot read file as string".to_owned())),
         };
 
-        let formatted = match format_str(&contents, extenstion) {
-            Ok(x) => x,
-            Err(err) => {
-                display_err(err, file);
-                return false;
-            }
-        };
-
-        //> write file
-            // leave file alone if there was no change
-            if formatted != contents {
-                let mut output = match File::create(file) {
-                    Ok(x) => x,
-                    Err(_) => return false,
-                };
-
-                match write!(output, "{}", formatted) {
-                    Ok(x) => x,
-                    Err(_) => return false,
-                };
-            }
-        //<
-
-        true
-    }
-
-    pub fn add_brackets_file(file: PathBuf) -> bool {
-        let extenstion = match file.extension() {
-            Some(x) => match x.to_str() {
-                Some(x) => x,
-                None => return false,
-            },
-            None => return false,
-        };
-
-        let contents = match fs::read_to_string(&file) {
-            Ok(x) => x,
-            Err(_) => return false,
-        };
-
-        let converted = match add_brackets(&contents, extenstion) {
-            Ok(x) => x,
-            Err(err) => {
-                display_err(err, file);
-                return false;
-            }
-        };
+        let converted = format_str(&contents, extenstion)?;
 
         //> write file
             // leave file alone if there was no change
             if converted != contents {
                 let mut output = match File::create(file) {
                     Ok(x) => x,
-                    Err(_) => return false,
+                    Err(_) => return Err((0, "Cannot create file".to_owned())),
                 };
 
                 match write!(output, "{}", converted) {
                     Ok(x) => x,
-                    Err(_) => return false,
+                    Err(_) => return Err((0, "Cannot write to file".to_owned())),
                 };
             }
         //<
 
-        true
+        Ok(())
+    }
+
+    pub fn add_brackets_file(file: PathBuf) -> Result<(), (usize, String)> {
+        let extenstion = match file.extension() {
+            Some(x) => match x.to_str() {
+                Some(x) => x,
+                None => return Err((0, "Cannot convert OS String to displayable".to_owned())),
+            },
+            None => return Err((0, "Cannot determine file extension".to_owned())),
+        };
+
+        let contents = match fs::read_to_string(&file) {
+            Ok(x) => x,
+            Err(_) => return Err((0, "Cannot read file as string".to_owned())),
+        };
+
+        let converted = add_brackets(&contents, extenstion)?;
+
+        //> write file
+            // leave file alone if there was no change
+            if converted != contents {
+                let mut output = match File::create(file) {
+                    Ok(x) => x,
+                    Err(_) => return Err((0, "Cannot create file".to_owned())),
+                };
+
+                match write!(output, "{}", converted) {
+                    Ok(x) => x,
+                    Err(_) => return Err((0, "Cannot write to file".to_owned())),
+                };
+            }
+        //<
+
+        Ok(())
     }
 
     struct CommentDetail {
@@ -796,7 +773,7 @@ pub mod scfmt {
 
     fn last_non_empty_line_before_index(
         index: usize,
-        lines_list: &Vec<String>,
+        lines_list: &[String],
     ) -> Option<(usize, &str)> {
         for i in (0..index).rev() {
             if !line_is_only_whitepace(&lines_list[i]) {
@@ -809,7 +786,7 @@ pub mod scfmt {
 
     fn add_open_bracket_to_last_comment(
         lines_list: &mut Vec<String>,
-        comment_tracker: &mut Vec<CommentDetail>,
+        comment_tracker: &mut [CommentDetail],
         comment_starter: &str,
     ) {
         let mut should_consume_closing_comment = false;
@@ -1041,7 +1018,7 @@ pub mod scfmt {
                     }
                 }
                 None => {
-                    lines_list.push(String::from("".to_owned()));
+                    lines_list.push("".to_owned());
                 }
             }
         }
@@ -1171,44 +1148,38 @@ pub mod scfmt {
         count
     }
 
-    pub fn remove_brackets_file(file: PathBuf) -> bool {
+    pub fn remove_brackets_file(file: PathBuf) -> Result<(), (usize, String)> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
-                None => return false,
+                None => return Err((0, "Cannot convert OS String to displayable".to_owned())),
             },
-            None => return false,
+            None => return Err((0, "Cannot determine file extension".to_owned())),
         };
 
         let contents = match fs::read_to_string(&file) {
             Ok(x) => x,
-            Err(_) => return false,
+            Err(_) => return Err((0, "Cannot read file as string".to_owned())),
         };
 
-        let converted = match remove_brackets(&contents, extenstion) {
-            Ok(x) => x,
-            Err(err) => {
-                display_err(err, file);
-                return false;
-            }
-        };
+        let converted = remove_brackets(&contents, extenstion)?;
 
         //> write file
             // leave file alone if there was no change
             if converted != contents {
                 let mut output = match File::create(file) {
                     Ok(x) => x,
-                    Err(_) => return false,
+                    Err(_) => return Err((0, "Cannot create file".to_owned())),
                 };
 
                 match write!(output, "{}", converted) {
                     Ok(x) => x,
-                    Err(_) => return false,
+                    Err(_) => return Err((0, "Cannot write to file".to_owned())),
                 };
             }
         //<
 
-        true
+        Ok(())
     }
 
     pub fn null_existing_brackets_file(file: PathBuf) -> bool {
@@ -1228,7 +1199,6 @@ pub mod scfmt {
         let converted = match null_existing_brackets(&contents, extenstion) {
             Some(x) => x,
             None => {
-                // display_err("err", file);
                 return false;
             }
         };
@@ -1286,7 +1256,7 @@ pub mod scfmt {
         }
     }
 
-    fn count_ending_empty_lines(lines_list: &Vec<String>) -> usize {
+    fn count_ending_empty_lines(lines_list: &[String]) -> usize {
         let mut count = 0;
         for i in (0..lines_list.len()).rev() {
             if !line_is_only_whitepace(&lines_list[i]) {
