@@ -11,7 +11,7 @@ fn display_if_err(err_result: Result<(), (usize, String)>, file: PathBuf) {
         if err.1 != "Incompatible file type" && err.1 != "Cannot determine file extension" {
             println!("{}: {}", "error".red().bold(), err.1);
             let mut line_string = "".to_owned();
-            if err.0 != 0{
+            if err.0 != 0 {
                 line_string = ":".to_owned() + &format!("{}", err.0)
             }
             println!(
@@ -47,9 +47,16 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
-                let paths = scfmt::get_files_in_dir(dir, "");
-                for file in paths {
-                    display_if_err(scfmt::format_file(file.to_path_buf()), file.to_path_buf());
+                match scfmt::get_files_in_dir(dir, "") {
+                    Ok(paths) => {
+                        for file in paths {
+                            display_if_err(
+                                scfmt::format_file(file.to_path_buf()),
+                                file.to_path_buf(),
+                            );
+                        }
+                    }
+                    Err(err) => println!("{:?}", err),
                 }
             } else if path.is_file() {
                 display_if_err(scfmt::format_file(path.to_path_buf()), path);
@@ -65,12 +72,16 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
-                let paths = scfmt::get_files_in_dir(dir, "");
-                for file in paths {
-                    display_if_err(
-                        scfmt::add_brackets_file(file.to_path_buf()),
-                        file.to_path_buf(),
-                    );
+                match scfmt::get_files_in_dir(dir, "") {
+                    Ok(paths) => {
+                        for file in paths {
+                            display_if_err(
+                                scfmt::add_brackets_file(file.to_path_buf()),
+                                file.to_path_buf(),
+                            );
+                        }
+                    }
+                    Err(err) => println!("{:?}", err),
                 }
             } else if path.is_file() {
                 display_if_err(scfmt::add_brackets_file(path.to_path_buf()), path);
@@ -82,12 +93,16 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
-                let paths = scfmt::get_files_in_dir(dir, "");
-                for file in &paths {
-                    display_if_err(
-                        scfmt::remove_brackets_file(file.to_path_buf()),
-                        file.to_path_buf(),
-                    );
+                match scfmt::get_files_in_dir(dir, "") {
+                    Ok(paths) => {
+                        for file in &paths {
+                            display_if_err(
+                                scfmt::remove_brackets_file(file.to_path_buf()),
+                                file.to_path_buf(),
+                            );
+                        }
+                    }
+                    Err(err) => println!("{:?}", err),
                 }
             } else if path.is_file() {
                 display_if_err(scfmt::remove_brackets_file(path.to_path_buf()), path);
@@ -99,9 +114,13 @@ OPTIONS:
             let path = PathBuf::from(dir);
 
             if path.is_dir() {
-                let paths = scfmt::get_files_in_dir(dir, "");
-                for file in paths {
-                    scfmt::null_existing_brackets_file(file);
+                match scfmt::get_files_in_dir(dir, "") {
+                    Ok(paths) => {
+                        for file in paths {
+                            scfmt::null_existing_brackets_file(file);
+                        }
+                    }
+                    Err(err) => println!("{:?}", err),
                 }
             } else if path.is_file() {
                 scfmt::null_existing_brackets_file(path);

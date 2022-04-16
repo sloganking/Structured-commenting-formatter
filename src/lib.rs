@@ -190,7 +190,7 @@ mod tests {
 
 pub mod scfmt {
 
-    use glob::glob;
+    use glob::{glob, GlobError};
     use phf::phf_map;
     use std::fs;
     use std::fs::File;
@@ -339,7 +339,7 @@ pub mod scfmt {
         whitespace + &str_no_whitespace
     }
 
-    pub fn get_files_in_dir(path: &str, filetype: &str) -> Vec<PathBuf> {
+    pub fn get_files_in_dir(path: &str, filetype: &str) -> Result<Vec<PathBuf>, GlobError> {
         //> get list of all files and dirs in path, using glob
             let mut paths = Vec::new();
 
@@ -355,7 +355,7 @@ pub mod scfmt {
                     Ok(path) => {
                         paths.push(path);
                     }
-                    Err(e) => println!("{:?}", e),
+                    Err(e) => return Err(e),
                 }
             }
 
@@ -368,7 +368,7 @@ pub mod scfmt {
                 .filter(|e| fs::read_to_string(e).is_ok())
                 .collect();
         //<
-        paths
+        Ok(paths)
     }
 
     fn ensure_previous_lines_have_correct_indentation(
