@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::scfmt;
+    use crate::scfmt::ScfmtErr;
     use std::fs;
 
     //> basic tests
@@ -40,21 +41,21 @@ mod tests {
         fn no_head_for_closing() {
             let before_formatting = fs::read_to_string("./test_resources/5_test.rs").unwrap();
             let formatted = scfmt::format_str(&before_formatting, "rs");
-            assert_eq!(formatted, Err((46, "< closed nothing".to_owned())));
+            assert_eq!(formatted, Err(ScfmtErr::CommentClosedNothing(46)));
         }
 
         #[test]
         fn no_head_for_middle() {
             let before_formatting = fs::read_to_string("./test_resources/6_test.rs").unwrap();
             let formatted = scfmt::format_str(&before_formatting, "rs");
-            assert_eq!(formatted, Err((21, "<> closed nothing".to_owned())));
+            assert_eq!(formatted, Err(ScfmtErr::CommentClosedNothing(21)));
         }
 
         #[test]
         fn head_never_closed() {
             let before_formatting = fs::read_to_string("./test_resources/7_test.rs").unwrap();
             let formatted = scfmt::format_str(&before_formatting, "rs");
-            assert_eq!(formatted, Err((1, "unclosed comment".to_owned())));
+            assert_eq!(formatted, Err(ScfmtErr::CommentNeverClosed(1)));
         }
 
     //<> ending empty lines are preserved
@@ -288,6 +289,18 @@ pub mod scfmt {
         "yaml" => "#",
     };
 
+    #[derive(PartialEq, Debug)]
+    pub enum ScfmtErr {
+        IncompatibleFileType,        //"Incompatible file type"
+        CommentClosedNothing(usize), //"<> closed nothing" or "< closed nothing"
+        CommentNeverClosed(usize),   //"unclosed comment"
+        CantConvertOsString,         //"Cannot convert OS String to displayable"
+        CantDetermineFileExtension,  //"Cannot determine file extension"
+        CantReadFileAsString,        //"Cannot read file as string"
+        CantCreatFile,               //"Cannot create file"
+        CantWriteToFile,             //"Cannot write to file"
+    }
+
     fn determine_whitespace_type(str: &str) -> (char, usize) {
         //> if no whitespace is found, assume format is 4 spaces
             let mut chr = ' ';
@@ -452,11 +465,11 @@ pub mod scfmt {
         )
     }
 
-    pub fn format_str(str: &str, filetype: &str) -> Result<String, (usize, String)> {
+    pub fn format_str(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
             Some(x) => *x,
-            None => return Err((0, "Incompatible file type".to_owned())),
+            None => return Err(ScfmtErr::IncompatibleFileType),
         };
 
         let mut formatted_file = String::from("");
@@ -485,7 +498,7 @@ pub mod scfmt {
                     //<
                 } else if is_a_comment & line_no_comment_starter.starts_with("<>") {
                     if comment_tracker.is_empty() {
-                        return Err((i + 1, "<> closed nothing".to_owned()));
+                        return Err(ScfmtErr::CommentClosedNothing(i + 1));
                     }
 
                     ensure_previous_lines_have_correct_indentation(
@@ -513,7 +526,7 @@ pub mod scfmt {
                     //<
                 } else if is_a_comment & line_no_comment_starter.starts_with('<') {
                     if comment_tracker.is_empty() {
-                        return Err((i + 1, "< closed nothing".to_owned()));
+                        return Err(ScfmtErr::CommentClosedNothing(i + 1));
                     }
 
                     ensure_previous_lines_have_correct_indentation(
@@ -554,7 +567,6 @@ pub mod scfmt {
                     formatted_lines.push("\n".to_string());
                 }
             //<
-
         }
 
         //> turn all lines into one string
@@ -562,7 +574,6 @@ pub mod scfmt {
                 formatted_file.push_str(&line);
             }
         //<
-
 
         // if the last char of source str wasn't '\n', don't add the last '\n'
         //> This prevents adding an additional empty line to our output, that wasn't in our input
@@ -576,24 +587,24 @@ pub mod scfmt {
         //<> ensure formatting successful
             if !comment_tracker.is_empty() {
                 let err_line = comment_tracker[comment_tracker.len() - 1].line + 1;
-                return Err((err_line, "unclosed comment".to_owned()));
+                return Err(ScfmtErr::CommentNeverClosed(err_line));
             }
         //<
         Ok(formatted_file)
     }
 
-    pub fn format_file(file: PathBuf) -> Result<(), (usize, String)> {
+    pub fn format_file(file: PathBuf) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
-                None => return Err((0, "Cannot convert OS String to displayable".to_owned())),
+                None => return Err(ScfmtErr::CantConvertOsString),
             },
-            None => return Err((0, "Cannot determine file extension".to_owned())),
+            None => return Err(ScfmtErr::CantDetermineFileExtension),
         };
 
         let contents = match fs::read_to_string(&file) {
             Ok(x) => x,
-            Err(_) => return Err((0, "Cannot read file as string".to_owned())),
+            Err(_) => return Err(ScfmtErr::CantReadFileAsString),
         };
 
         let converted = format_str(&contents, extenstion)?;
@@ -603,12 +614,12 @@ pub mod scfmt {
             if converted != contents {
                 let mut output = match File::create(file) {
                     Ok(x) => x,
-                    Err(_) => return Err((0, "Cannot create file".to_owned())),
+                    Err(_) => return Err(ScfmtErr::CantCreatFile),
                 };
 
                 match write!(output, "{}", converted) {
                     Ok(x) => x,
-                    Err(_) => return Err((0, "Cannot write to file".to_owned())),
+                    Err(_) => return Err(ScfmtErr::CantWriteToFile),
                 };
             }
         //<
@@ -616,18 +627,18 @@ pub mod scfmt {
         Ok(())
     }
 
-    pub fn add_brackets_file(file: PathBuf) -> Result<(), (usize, String)> {
+    pub fn add_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
-                None => return Err((0, "Cannot convert OS String to displayable".to_owned())),
+                None => return Err(ScfmtErr::CantConvertOsString),
             },
-            None => return Err((0, "Cannot determine file extension".to_owned())),
+            None => return Err(ScfmtErr::CantDetermineFileExtension),
         };
 
         let contents = match fs::read_to_string(&file) {
             Ok(x) => x,
-            Err(_) => return Err((0, "Cannot read file as string".to_owned())),
+            Err(_) => return Err(ScfmtErr::CantReadFileAsString),
         };
 
         let converted = add_brackets(&contents, extenstion)?;
@@ -637,12 +648,12 @@ pub mod scfmt {
             if converted != contents {
                 let mut output = match File::create(file) {
                     Ok(x) => x,
-                    Err(_) => return Err((0, "Cannot create file".to_owned())),
+                    Err(_) => return Err(ScfmtErr::CantCreatFile),
                 };
 
                 match write!(output, "{}", converted) {
                     Ok(x) => x,
-                    Err(_) => return Err((0, "Cannot write to file".to_owned())),
+                    Err(_) => return Err(ScfmtErr::CantWriteToFile),
                 };
             }
         //<
@@ -865,11 +876,11 @@ pub mod scfmt {
         true
     }
 
-    pub fn add_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
+    pub fn add_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
             Some(x) => *x,
-            None => return Err((0, "Incompatible file type".to_owned())),
+            None => return Err(ScfmtErr::IncompatibleFileType),
         };
 
         // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
@@ -1057,11 +1068,11 @@ pub mod scfmt {
         Ok(final_string)
     }
 
-    pub fn null_existing_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
+    pub fn null_existing_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
             Some(x) => *x,
-            None => return Err((0, "Incompatible file type".to_owned())),
+            None => return Err(ScfmtErr::IncompatibleFileType),
         };
 
         let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
@@ -1142,18 +1153,18 @@ pub mod scfmt {
         count
     }
 
-    pub fn remove_brackets_file(file: PathBuf) -> Result<(), (usize, String)> {
+    pub fn remove_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
-                None => return Err((0, "Cannot convert OS String to displayable".to_owned())),
+                None => return Err(ScfmtErr::CantConvertOsString),
             },
-            None => return Err((0, "Cannot determine file extension".to_owned())),
+            None => return Err(ScfmtErr::CantDetermineFileExtension),
         };
 
         let contents = match fs::read_to_string(&file) {
             Ok(x) => x,
-            Err(_) => return Err((0, "Cannot read file as string".to_owned())),
+            Err(_) => return Err(ScfmtErr::CantReadFileAsString),
         };
 
         let converted = remove_brackets(&contents, extenstion)?;
@@ -1163,12 +1174,12 @@ pub mod scfmt {
             if converted != contents {
                 let mut output = match File::create(file) {
                     Ok(x) => x,
-                    Err(_) => return Err((0, "Cannot create file".to_owned())),
+                    Err(_) => return Err(ScfmtErr::CantCreatFile),
                 };
 
                 match write!(output, "{}", converted) {
                     Ok(x) => x,
-                    Err(_) => return Err((0, "Cannot write to file".to_owned())),
+                    Err(_) => return Err(ScfmtErr::CantWriteToFile),
                 };
             }
         //<
@@ -1176,18 +1187,18 @@ pub mod scfmt {
         Ok(())
     }
 
-    pub fn null_existing_brackets_file(file: PathBuf) -> Result<(), (usize, String)> {
+    pub fn null_existing_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
-                None => return Err((0, "Cannot convert OS String to displayable".to_owned())),
+                None => return Err(ScfmtErr::CantConvertOsString),
             },
-            None => return Err((0, "Cannot determine file extension".to_owned())),
+            None => return Err(ScfmtErr::CantDetermineFileExtension),
         };
 
         let contents = match fs::read_to_string(&file) {
             Ok(x) => x,
-            Err(_) => return Err((0, "Cannot read file as string".to_owned())),
+            Err(_) => return Err(ScfmtErr::CantReadFileAsString),
         };
 
         let converted = null_existing_brackets(&contents, extenstion)?;
@@ -1197,12 +1208,12 @@ pub mod scfmt {
             if converted != contents {
                 let mut output = match File::create(file) {
                     Ok(x) => x,
-                    Err(_) => return Err((0, "Cannot create file".to_owned())),
+                    Err(_) => return Err(ScfmtErr::CantCreatFile),
                 };
 
                 match write!(output, "{}", converted) {
                     Ok(x) => x,
-                    Err(_) => return Err((0, "Cannot write to file".to_owned())),
+                    Err(_) => return Err(ScfmtErr::CantWriteToFile),
                 };
             }
         //<
@@ -1263,11 +1274,11 @@ pub mod scfmt {
         }
     }
 
-    pub fn remove_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
+    pub fn remove_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
             Some(x) => *x,
-            None => return Err((0, "Incompatible file type".to_owned())),
+            None => return Err(ScfmtErr::IncompatibleFileType),
         };
 
         let mut lines_list: Vec<String> = Vec::new();
