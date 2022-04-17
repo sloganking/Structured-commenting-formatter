@@ -5,7 +5,7 @@ use std::{env, path::PathBuf};
 #[macro_use]
 extern crate version;
 
-static HELP_STR: &str =
+static HELP_STR: &str = 
 "scfmt - structured commenting formatter
 
 USAGE:
