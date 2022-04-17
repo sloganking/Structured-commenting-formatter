@@ -553,16 +553,16 @@ pub mod scfmt {
                     // all whitespace only lines are set to depth 0
                     formatted_lines.push("\n".to_string());
                 }
-
             //<
+
         }
 
         //> turn all lines into one string
             for line in formatted_lines {
                 formatted_file.push_str(&line);
             }
-
         //<
+
 
         // if the last char of source str wasn't '\n', don't add the last '\n'
         //> This prevents adding an additional empty line to our output, that wasn't in our input
