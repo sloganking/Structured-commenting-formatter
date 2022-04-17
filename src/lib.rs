@@ -1057,11 +1057,11 @@ pub mod scfmt {
         Ok(final_string)
     }
 
-    pub fn null_existing_brackets(str: &str, filetype: &str) -> Option<String> {
+    pub fn null_existing_brackets(str: &str, filetype: &str) -> Result<String, (usize, String)> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
             Some(x) => *x,
-            None => return None,
+            None => return Err((0, "Incompatible file type".to_owned())),
         };
 
         let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
@@ -1125,7 +1125,7 @@ pub mod scfmt {
             }
         //<
 
-        Some(final_string)
+        Ok(final_string)
     }
 
     fn count_lines(str: &str) -> usize {
@@ -1176,43 +1176,38 @@ pub mod scfmt {
         Ok(())
     }
 
-    pub fn null_existing_brackets_file(file: PathBuf) -> bool {
+    pub fn null_existing_brackets_file(file: PathBuf) -> Result<(), (usize, String)> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
-                None => return false,
+                None => return Err((0, "Cannot convert OS String to displayable".to_owned())),
             },
-            None => return false,
+            None => return Err((0, "Cannot determine file extension".to_owned())),
         };
 
         let contents = match fs::read_to_string(&file) {
             Ok(x) => x,
-            Err(_) => return false,
+            Err(_) => return Err((0, "Cannot read file as string".to_owned())),
         };
 
-        let converted = match null_existing_brackets(&contents, extenstion) {
-            Some(x) => x,
-            None => {
-                return false;
-            }
-        };
+        let converted = null_existing_brackets(&contents, extenstion)?;
 
         //> write file
             // leave file alone if there was no change
             if converted != contents {
                 let mut output = match File::create(file) {
                     Ok(x) => x,
-                    Err(_) => return false,
+                    Err(_) => return Err((0, "Cannot create file".to_owned())),
                 };
 
                 match write!(output, "{}", converted) {
                     Ok(x) => x,
-                    Err(_) => return false,
+                    Err(_) => return Err((0, "Cannot write to file".to_owned())),
                 };
             }
         //<
 
-        true
+        Ok(())
     }
 
     fn line_is_a_comment(str: &str, comment_starter: &str) -> bool {

@@ -123,13 +123,19 @@ fn main() {
                 match scfmt::get_files_in_dir(dir, "") {
                     Ok(paths) => {
                         for file in paths {
-                            scfmt::null_existing_brackets_file(file);
+                            display_if_err(
+                                scfmt::null_existing_brackets_file(file.to_path_buf()),
+                                file,
+                            );
                         }
                     }
                     Err(err) => println!("{:?}", err),
                 }
             } else if path.is_file() {
-                scfmt::null_existing_brackets_file(path);
+                display_if_err(
+                    scfmt::null_existing_brackets_file(path.to_path_buf()),
+                    path,
+                );
             } else {
                 print_err("second arg must be a path or file");
             }
