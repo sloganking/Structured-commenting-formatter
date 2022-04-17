@@ -4,6 +4,19 @@ use std::{env, path::PathBuf};
 #[macro_use]
 extern crate version;
 
+static HELP_STR: &str = 
+"scfmt - structured commenting formatter
+
+USAGE:
+    [OPTIONS] [DIRECTORY]
+
+OPTIONS:
+    *None*                      Passing no option simply formats bracketed structured comments
+    ab, add_brackets            Gives brackets to any bracketless strucutered comments
+    rb, remove_brackets         Removes brackets from any bracketed structured comments
+    n,  null                    Invalidates any existing bracketed comments, while preserving their content
+    v,  version                 Print current version info";
+
 fn print_err(err: &str) {
     println!("{}: {}", "error".red().bold(), err);
 }
@@ -33,19 +46,7 @@ fn main() {
         let dir = &args[1];
 
         if dir == "help" {
-            println!(
-"scfmt - structured commenting formatter
-
-USAGE:
-    [OPTIONS] [DIRECTORY]
-
-OPTIONS:
-    *None*                      Passing no option simply formats bracketed structured comments
-    ab, add_brackets            Gives brackets to any bracketless strucutered comments
-    rb, remove_brackets         Removes brackets from any bracketed structured comments
-    n,  null                    Invalidates any existing bracketed comments, while preserving their content
-    v,  version                 Print current version info"
-            )
+            println!("{}",HELP_STR);
         } else if &args[1] == "version" || &args[1] == "v" {
             println!("scfmt {}", version!());
         } else {
