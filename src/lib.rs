@@ -158,9 +158,9 @@ mod tests {
             let formatted = scfmt::format_str(&to_format, "rs").unwrap();
             assert_eq!(answer, formatted);
         }
-    //<> tab_depth of 2 (two spaces per indent)
+    //<> tab_spaces of 2 (two spaces per indent)
         #[test]
-        fn format_str_tab_depth_of_2() {
+        fn format_str_tab_spaces_of_2() {
             let to_format = fs::read_to_string("./test_resources/10_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/10_answer.rs").unwrap();
             let formatted = scfmt::format_str(&to_format, "rs").unwrap();
