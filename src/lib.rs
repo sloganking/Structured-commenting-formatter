@@ -179,14 +179,28 @@ mod tests {
             let formatted = scfmt::format_str("//>\n// < test", "rs").unwrap();
             assert_eq!(formatted, "//>\n// <\n// test");
         }
-    //<> nullify brackets
-        #[test]
-        fn nullify_brackets() {
-            let formatted =
-                scfmt::null_existing_brackets("//>\n    //>\n//\n    //<\n//<", "rs").unwrap();
-            assert_eq!(formatted, "//_>\n    //_>\n//\n    //_<\n//_<");
-        }
     //<
+    #[test]
+    fn nullify_brackets() {
+        let formatted =
+            scfmt::null_existing_brackets("//>\n    //>\n//\n    //<\n//<", "rs").unwrap();
+        assert_eq!(formatted, "//_>\n    //_>\n//\n    //_<\n//_<");
+    }
+
+    #[test]
+    fn incompatible_file_type() {
+        let result = scfmt::format_str("", "");
+        assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
+
+        let result = scfmt::add_brackets("", "");
+        assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
+
+        let result = scfmt::remove_brackets("", "");
+        assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
+
+        let result = scfmt::null_existing_brackets("", "");
+        assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
+    }
 }
 
 pub mod scfmt {
