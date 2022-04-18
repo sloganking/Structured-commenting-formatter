@@ -43,7 +43,6 @@ fn print_if_err(err_result: Result<(), ScfmtErr>, file: PathBuf) {
             ScfmtErr::CantConvertOsString => {
                 print_err(&("Cannot convert OS String to displayable\n".to_owned() + &file_string))
             }
-            // ScfmtErr::CantDetermineFileExtension            => {print_err(&("Cannot determine file extension\n".to_owned() + &file_string))},
             ScfmtErr::CantReadFileAsString => {
                 print_err(&("Cannot read file as string\n".to_owned() + &file_string))
             }

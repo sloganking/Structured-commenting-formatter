@@ -295,7 +295,6 @@ pub mod scfmt {
         CommentClosedNothing(usize), //"<> closed nothing" or "< closed nothing"
         CommentNeverClosed(usize),   //"unclosed comment"
         CantConvertOsString,         //"Cannot convert OS String to displayable"
-        CantDetermineFileExtension,  //"Cannot determine file extension"
         CantReadFileAsString,        //"Cannot read file as string"
         CantCreatFile,               //"Cannot create file"
         CantWriteToFile,             //"Cannot write to file"
@@ -599,7 +598,7 @@ pub mod scfmt {
                 Some(x) => x,
                 None => return Err(ScfmtErr::CantConvertOsString),
             },
-            None => return Err(ScfmtErr::CantDetermineFileExtension),
+            None => return Err(ScfmtErr::IncompatibleFileType),
         };
 
         let contents = match fs::read_to_string(&file) {
@@ -633,7 +632,7 @@ pub mod scfmt {
                 Some(x) => x,
                 None => return Err(ScfmtErr::CantConvertOsString),
             },
-            None => return Err(ScfmtErr::CantDetermineFileExtension),
+            None => return Err(ScfmtErr::IncompatibleFileType),
         };
 
         let contents = match fs::read_to_string(&file) {
@@ -1159,7 +1158,7 @@ pub mod scfmt {
                 Some(x) => x,
                 None => return Err(ScfmtErr::CantConvertOsString),
             },
-            None => return Err(ScfmtErr::CantDetermineFileExtension),
+            None => return Err(ScfmtErr::IncompatibleFileType),
         };
 
         let contents = match fs::read_to_string(&file) {
@@ -1193,7 +1192,7 @@ pub mod scfmt {
                 Some(x) => x,
                 None => return Err(ScfmtErr::CantConvertOsString),
             },
-            None => return Err(ScfmtErr::CantDetermineFileExtension),
+            None => return Err(ScfmtErr::IncompatibleFileType),
         };
 
         let contents = match fs::read_to_string(&file) {
