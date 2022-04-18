@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn determine_whitespace_type_gets_best_result(){
+    fn determine_whitespace_type_gets_best_result() {
         let to_format = fs::read_to_string("./test_resources/11_test.rs").unwrap();
         let formatted = scfmt::format_str(&to_format, "rs").unwrap();
         let answer = fs::read_to_string("./test_resources/11_answer.rs").unwrap();
@@ -314,13 +314,13 @@ pub mod scfmt {
 
     #[derive(PartialEq, Debug)]
     pub enum ScfmtErr {
-        IncompatibleFileType,        //"Incompatible file type"
-        CommentClosedNothing(usize), //"<> closed nothing" or "< closed nothing"
-        CommentNeverClosed(usize),   //"unclosed comment"
-        CantConvertOsString,         //"Cannot convert OS String to displayable"
-        CantReadFileAsString,        //"Cannot read file as string"
-        CantCreatFile,               //"Cannot create file"
-        CantWriteToFile,             //"Cannot write to file"
+        IncompatibleFileType,
+        CommentClosedNothing(usize),
+        CommentNeverClosed(usize),
+        CantConvertOsString,
+        CantReadFileAsString,
+        CantCreatFile,
+        CantWriteToFile,
     }
 
     fn determine_whitespace_type(str: &str) -> (char, usize) {
@@ -337,18 +337,17 @@ pub mod scfmt {
         let mut cur_depth = 0;
 
         for line in str.lines() {
-
             // if line is not empty
             if let Some(first_char) = line.chars().next() {
-
                 //> get dif between this line and last line
                     last_depth = cur_depth;
-                    cur_depth = if let Some((local_depth, _)) = count_and_remove_begining_whitespace(line) {
-                        local_depth
-                    } else {
-                        0
-                    };
-                    
+                    cur_depth =
+                        if let Some((local_depth, _)) = count_and_remove_begining_whitespace(line) {
+                            local_depth
+                        } else {
+                            0
+                        };
+
                     let diff = (last_depth as isize - cur_depth as isize).abs() as usize;
                 //<
 
