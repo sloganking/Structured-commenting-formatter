@@ -201,6 +201,14 @@ mod tests {
         let result = scfmt::null_existing_brackets("", "");
         assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
     }
+
+    #[test]
+    fn determine_whitespace_type_gets_best_result(){
+        let to_format = fs::read_to_string("./test_resources/11_test.rs").unwrap();
+        let formatted = scfmt::format_str(&to_format, "rs").unwrap();
+        let answer = fs::read_to_string("./test_resources/11_answer.rs").unwrap();
+        assert_eq!(answer, formatted);
+    }
 }
 
 pub mod scfmt {
@@ -324,22 +332,26 @@ pub mod scfmt {
         let mut tab_count = 0;
         let mut space_count = 0;
         let mut tab_spaces_count_map: HashMap<usize, usize> = HashMap::new();
-        let mut last_depth = 0;
+        let mut last_depth;
         let mut last_diff = 0;
+        let mut cur_depth = 0;
 
         for line in str.lines() {
-            //> get dif between this line and last line
-                let depth = if let Some((local_depth, _)) = count_and_remove_begining_whitespace(line) {
-                    local_depth
-                } else {
-                    0
-                };
-
-                let diff = (last_depth as isize - depth as isize).abs() as usize;
-            //<
 
             // if line is not empty
             if let Some(first_char) = line.chars().next() {
+
+                //> get dif between this line and last line
+                    last_depth = cur_depth;
+                    cur_depth = if let Some((local_depth, _)) = count_and_remove_begining_whitespace(line) {
+                        local_depth
+                    } else {
+                        0
+                    };
+                    
+                    let diff = (last_depth as isize - cur_depth as isize).abs() as usize;
+                //<
+
                 match first_char {
                     ' ' => space_count += 1,
                     '\t' => tab_count += 1,
@@ -359,7 +371,6 @@ pub mod scfmt {
                     };
 
                     last_diff = diff;
-                    last_depth = diff;
                 } else {
                     // if there was no change in diff, count the last_diff
 
