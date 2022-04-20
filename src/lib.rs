@@ -9,7 +9,7 @@ mod tests {
         fn format_str() {
             let to_format = fs::read_to_string("./test_resources/1_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/1_answer.rs").unwrap();
-            let formatted = scfmt::format_str(&to_format, "rs").unwrap();
+            let formatted = scfmt::format_str(&to_format, "rs", None).unwrap();
             assert_eq!(answer, formatted);
         }
 
@@ -17,7 +17,7 @@ mod tests {
         fn add_brackets() {
             let to_format = fs::read_to_string("./test_resources/2_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/2_answer.rs").unwrap();
-            let formatted = scfmt::add_brackets(&to_format, "rs").unwrap();
+            let formatted = scfmt::add_brackets(&to_format, "rs", None).unwrap();
             assert_eq!(answer, formatted);
         }
 
@@ -25,14 +25,14 @@ mod tests {
         fn remove_brackets() {
             let to_format = fs::read_to_string("./test_resources/3_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/3_answer.rs").unwrap();
-            let formatted = scfmt::remove_brackets(&to_format, "rs").unwrap();
+            let formatted = scfmt::remove_brackets(&to_format, "rs", None).unwrap();
             assert_eq!(answer, formatted);
         }
 
         #[test]
         fn no_change_without_brackets() {
             let before_formatting = fs::read_to_string("./test_resources/4_test.rs").unwrap();
-            let formatted = scfmt::format_str(&before_formatting, "rs").unwrap();
+            let formatted = scfmt::format_str(&before_formatting, "rs", None).unwrap();
             assert_eq!(formatted, before_formatting);
         }
 
@@ -40,21 +40,21 @@ mod tests {
         #[test]
         fn no_head_for_closing() {
             let before_formatting = fs::read_to_string("./test_resources/5_test.rs").unwrap();
-            let formatted = scfmt::format_str(&before_formatting, "rs");
+            let formatted = scfmt::format_str(&before_formatting, "rs", None);
             assert_eq!(formatted, Err(ScfmtErr::CommentClosedNothing(46)));
         }
 
         #[test]
         fn no_head_for_middle() {
             let before_formatting = fs::read_to_string("./test_resources/6_test.rs").unwrap();
-            let formatted = scfmt::format_str(&before_formatting, "rs");
+            let formatted = scfmt::format_str(&before_formatting, "rs", None);
             assert_eq!(formatted, Err(ScfmtErr::CommentClosedNothing(21)));
         }
 
         #[test]
         fn head_never_closed() {
             let before_formatting = fs::read_to_string("./test_resources/7_test.rs").unwrap();
-            let formatted = scfmt::format_str(&before_formatting, "rs");
+            let formatted = scfmt::format_str(&before_formatting, "rs", None);
             assert_eq!(formatted, Err(ScfmtErr::CommentNeverClosed(1)));
         }
 
@@ -62,22 +62,22 @@ mod tests {
         #[test]
         fn format_preserves_ending_empty_lines() {
             //> empty input
-                let formatted = scfmt::format_str("", "rs").unwrap();
+                let formatted = scfmt::format_str("", "rs", None).unwrap();
                 assert_eq!(formatted, "");
             //<> 0 empty ending lines
-                let formatted = scfmt::format_str("//>\n//<", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n//<");
             //<> 1 empty ending lines
-                let formatted = scfmt::format_str("//>\n//<\n", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n//<\n");
             //<> 2 empty ending lines
-                let formatted = scfmt::format_str("//>\n//<\n\n", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<\n\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n//<\n\n");
             //<> 3 empty ending lines
-                let formatted = scfmt::format_str("//>\n//<\n\n\n", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<\n\n\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n//<\n\n\n");
             //<> 3 empty ending lines with space on last line
-                let formatted = scfmt::format_str("//>\n//<\n\n\n ", "rs").unwrap();
+                let formatted = scfmt::format_str("//>\n//<\n\n\n ", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n//<\n\n\n");
             //<
         }
@@ -85,22 +85,24 @@ mod tests {
         #[test]
         fn remove_brackets_preserves_ending_empty_lines() {
             //> empty input
-                let formatted = scfmt::remove_brackets("", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("", "rs", None).unwrap();
                 assert_eq!(formatted, "");
             //<> 0 empty ending lines
-                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<", "rs", None).unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;");
             //<> 1 empty ending lines
-                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;\n");
             //<> 2 empty ending lines
-                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n", "rs").unwrap();
+                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;\n\n");
             //<> 3 empty ending lines
-                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n\n", "rs").unwrap();
+                let formatted =
+                    scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;\n\n\n");
             //<> 3 empty ending lines with space on last line
-                let formatted = scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n\n ", "rs").unwrap();
+                let formatted =
+                    scfmt::remove_brackets("//>\n    let a = 0;\n//<\n\n\n ", "rs", None).unwrap();
                 assert_eq!(formatted, "//\n    let a = 0;\n\n\n");
             //<
         }
@@ -108,22 +110,22 @@ mod tests {
         #[test]
         fn add_brackets_preserves_ending_empty_lines() {
             //> empty input
-                let formatted = scfmt::add_brackets("", "rs").unwrap();
+                let formatted = scfmt::add_brackets("", "rs", None).unwrap();
                 assert_eq!(formatted, "");
             //<> 0 empty ending lines
-                let formatted = scfmt::add_brackets("//\n    let a = 0;", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<");
             //<> 1 empty ending lines
-                let formatted = scfmt::add_brackets("//\n    let a = 0;\n", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<\n");
             //<> 2 empty ending lines
-                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<\n\n");
             //<> 3 empty ending lines
-                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n\n", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<\n\n\n");
             //<> 3 empty ending lines with space at end
-                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n\n ", "rs").unwrap();
+                let formatted = scfmt::add_brackets("//\n    let a = 0;\n\n\n ", "rs", None).unwrap();
                 assert_eq!(formatted, "//>\n    let a = 0;\n//<\n\n\n");
             //<
         }
@@ -131,22 +133,22 @@ mod tests {
         #[test]
         fn null_brackets_preserves_ending_empty_lines() {
             //> empty input
-                let formatted = scfmt::null_existing_brackets("", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("", "rs", None).unwrap();
                 assert_eq!(formatted, "");
             //<> 0 empty ending lines
-                let formatted = scfmt::null_existing_brackets("//>\n//<", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<", "rs", None).unwrap();
                 assert_eq!(formatted, "//_>\n//_<");
             //<> 1 empty ending lines
-                let formatted = scfmt::null_existing_brackets("//>\n//<\n", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//_>\n//_<\n");
             //<> 2 empty ending lines
-                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//_>\n//_<\n\n");
             //<> 3 empty ending lines
-                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n\n", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n\n", "rs", None).unwrap();
                 assert_eq!(formatted, "//_>\n//_<\n\n\n");
             //<> 3 empty ending lines with space at end
-                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n\n ", "rs").unwrap();
+                let formatted = scfmt::null_existing_brackets("//>\n//<\n\n\n ", "rs", None).unwrap();
                 assert_eq!(formatted, "//_>\n//_<\n\n\n");
             //<
         }
@@ -156,7 +158,7 @@ mod tests {
         fn format_str_tabs() {
             let to_format = fs::read_to_string("./test_resources/9_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/9_answer.rs").unwrap();
-            let formatted = scfmt::format_str(&to_format, "rs").unwrap();
+            let formatted = scfmt::format_str(&to_format, "rs", None).unwrap();
             assert_eq!(answer, formatted);
         }
     //<> tab_spaces of 2 (two spaces per indent)
@@ -164,48 +166,48 @@ mod tests {
         fn format_str_tab_spaces_of_2() {
             let to_format = fs::read_to_string("./test_resources/10_test.rs").unwrap();
             let answer = fs::read_to_string("./test_resources/10_answer.rs").unwrap();
-            let formatted = scfmt::format_str(&to_format, "rs").unwrap();
+            let formatted = scfmt::format_str(&to_format, "rs", None).unwrap();
             assert_eq!(answer, formatted);
         }
     //<> comment contents on closing brackets are preserved
         #[test]
         fn preserve_closing_comment_content() {
-            let formatted = scfmt::format_str("//>\n//< test", "rs").unwrap();
+            let formatted = scfmt::format_str("//>\n//< test", "rs", None).unwrap();
             assert_eq!(formatted, "//>\n//<\n// test");
         }
 
         #[test]
         fn preserve_closing_comment_content_and_spacing() {
-            let formatted = scfmt::format_str("//>\n// < test", "rs").unwrap();
+            let formatted = scfmt::format_str("//>\n// < test", "rs", None).unwrap();
             assert_eq!(formatted, "//>\n// <\n// test");
         }
     //<
     #[test]
     fn nullify_brackets() {
         let formatted =
-            scfmt::null_existing_brackets("//>\n    //>\n//\n    //<\n//<", "rs").unwrap();
+            scfmt::null_existing_brackets("//>\n    //>\n//\n    //<\n//<", "rs", None).unwrap();
         assert_eq!(formatted, "//_>\n    //_>\n//\n    //_<\n//_<");
     }
 
     #[test]
     fn incompatible_file_type() {
-        let result = scfmt::format_str("", "");
+        let result = scfmt::format_str("", "", None);
         assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
 
-        let result = scfmt::add_brackets("", "");
+        let result = scfmt::add_brackets("", "", None);
         assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
 
-        let result = scfmt::remove_brackets("", "");
+        let result = scfmt::remove_brackets("", "", None);
         assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
 
-        let result = scfmt::null_existing_brackets("", "");
+        let result = scfmt::null_existing_brackets("", "", None);
         assert_eq!(result, Err(ScfmtErr::IncompatibleFileType));
     }
 
     #[test]
     fn determine_whitespace_type_gets_best_result() {
         let to_format = fs::read_to_string("./test_resources/11_test.rs").unwrap();
-        let formatted = scfmt::format_str(&to_format, "rs").unwrap();
+        let formatted = scfmt::format_str(&to_format, "rs", None).unwrap();
         let answer = fs::read_to_string("./test_resources/11_answer.rs").unwrap();
         assert_eq!(answer, formatted);
     }
@@ -323,8 +325,24 @@ pub mod scfmt {
         CantWriteToFile,
     }
 
-    fn determine_whitespace_type(str: &str) -> (char, usize) {
-        //> if no whitespace is found, assume format is 4 spaces
+    pub enum IndentType {
+        Tabs,
+        Spaces(u8),
+    }
+
+    fn determine_whitespace_type(
+        str: &str,
+        indent_type_option: Option<IndentType>,
+    ) -> (char, usize) {
+        //> process and return if type was manually specified
+            if let Some(indent_type) = indent_type_option {
+                match indent_type {
+                    IndentType::Tabs => return ('\t', 1),
+                    IndentType::Spaces(x) => return (' ', x as usize),
+                };
+            }
+
+        //<> if no whitespace is found, assume format is 4 spaces
             let mut chr = ' ';
             let mut num = 4;
         //<
@@ -547,16 +565,22 @@ pub mod scfmt {
         )
     }
 
-    pub fn format_str(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
-        // determine if file compatible
-        let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
-            Some(x) => *x,
-            None => return Err(ScfmtErr::IncompatibleFileType),
-        };
+    pub fn format_str(
+        str: &str,
+        filetype: &str,
+        indent_type_option: Option<IndentType>,
+    ) -> Result<String, ScfmtErr> {
+        //> determine if file compatible
+            let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
+                Some(x) => *x,
+                None => return Err(ScfmtErr::IncompatibleFileType),
+            };
+        //<
+
+        let (whitespace_char, tab_spaces) = determine_whitespace_type(str, indent_type_option);
 
         let mut formatted_file = String::from("");
         let mut formatted_lines: Vec<String> = Vec::new();
-        let (whitespace_char, tab_spaces) = determine_whitespace_type(str);
         let mut comment_tracker: Vec<CommentDetail> = Vec::new();
 
         for (i, line) in str.lines().enumerate() {
@@ -675,7 +699,10 @@ pub mod scfmt {
         Ok(formatted_file)
     }
 
-    pub fn format_file(file: PathBuf) -> Result<(), ScfmtErr> {
+    pub fn format_file(
+        file: PathBuf,
+        indent_type_option: Option<IndentType>,
+    ) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
@@ -689,7 +716,7 @@ pub mod scfmt {
             Err(_) => return Err(ScfmtErr::CantReadFileAsString),
         };
 
-        let converted = format_str(&contents, extenstion)?;
+        let converted = format_str(&contents, extenstion, indent_type_option)?;
 
         //> write file
             // leave file alone if there was no change
@@ -709,7 +736,10 @@ pub mod scfmt {
         Ok(())
     }
 
-    pub fn add_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
+    pub fn add_brackets_file(
+        file: PathBuf,
+        indent_type_option: Option<IndentType>,
+    ) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
@@ -723,7 +753,7 @@ pub mod scfmt {
             Err(_) => return Err(ScfmtErr::CantReadFileAsString),
         };
 
-        let converted = add_brackets(&contents, extenstion)?;
+        let converted = add_brackets(&contents, extenstion, indent_type_option)?;
 
         //> write file
             // leave file alone if there was no change
@@ -958,24 +988,40 @@ pub mod scfmt {
         true
     }
 
-    pub fn add_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
-        // determine if file compatible
-        let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
-            Some(x) => *x,
-            None => return Err(ScfmtErr::IncompatibleFileType),
-        };
+    fn indent_pair_to_indent_type(whitespace_char: char, tab_spaces: usize) -> Option<IndentType> {
+        match whitespace_char {
+            ' ' => Some(IndentType::Spaces(tab_spaces as u8)),
+            '\t' => Some(IndentType::Tabs),
+            _ => None,
+        }
+    }
+
+    pub fn add_brackets(
+        str: &str,
+        filetype: &str,
+        indent_type_option: Option<IndentType>,
+    ) -> Result<String, ScfmtErr> {
+        //> determine if file compatible
+            let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
+                Some(x) => *x,
+                None => return Err(ScfmtErr::IncompatibleFileType),
+            };
+        //<
+
+        let (whitespace_char, tab_spaces) = determine_whitespace_type(str, indent_type_option);
 
         // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
-        let str = &remove_brackets(str, filetype)?;
-
-        let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
+        let str = &remove_brackets(
+            str,
+            filetype,
+            indent_pair_to_indent_type(whitespace_char, tab_spaces),
+        )?;
 
         let mut comment_tracker: Vec<CommentDetail> = Vec::new();
-
         let mut lines_list: Vec<String> = Vec::new();
         let mut unsure_if_last_comment_was_structured = true;
-
         let mut processed_line_count = 0;
+
         for line in str.lines() {
             // counts how many lines this loop has processed
             processed_line_count += 1;
@@ -1150,16 +1196,23 @@ pub mod scfmt {
         Ok(final_string)
     }
 
-    pub fn null_existing_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
-        // determine if file compatible
-        let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
-            Some(x) => *x,
-            None => return Err(ScfmtErr::IncompatibleFileType),
-        };
+    pub fn null_existing_brackets(
+        str: &str,
+        filetype: &str,
+        indent_type_option: Option<IndentType>,
+    ) -> Result<String, ScfmtErr> {
+        //> determine if file compatible
+            let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
+                Some(x) => *x,
+                None => return Err(ScfmtErr::IncompatibleFileType),
+            };
+        //<
 
-        let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
+        let (whitespace_char, _tab_spaces) = determine_whitespace_type(str, indent_type_option);
+
         let mut lines_list = Vec::new();
         let mut processed_line_count = 0;
+
         for line in str.lines() {
             // counts how many lines this loop has processed
             processed_line_count += 1;
@@ -1235,7 +1288,10 @@ pub mod scfmt {
         count
     }
 
-    pub fn remove_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
+    pub fn remove_brackets_file(
+        file: PathBuf,
+        indent_type_option: Option<IndentType>,
+    ) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
@@ -1249,7 +1305,7 @@ pub mod scfmt {
             Err(_) => return Err(ScfmtErr::CantReadFileAsString),
         };
 
-        let converted = remove_brackets(&contents, extenstion)?;
+        let converted = remove_brackets(&contents, extenstion, indent_type_option)?;
 
         //> write file
             // leave file alone if there was no change
@@ -1269,7 +1325,10 @@ pub mod scfmt {
         Ok(())
     }
 
-    pub fn null_existing_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
+    pub fn null_existing_brackets_file(
+        file: PathBuf,
+        indent_type_option: Option<IndentType>,
+    ) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
                 Some(x) => x,
@@ -1283,7 +1342,7 @@ pub mod scfmt {
             Err(_) => return Err(ScfmtErr::CantReadFileAsString),
         };
 
-        let converted = null_existing_brackets(&contents, extenstion)?;
+        let converted = null_existing_brackets(&contents, extenstion, indent_type_option)?;
 
         //> write file
             // leave file alone if there was no change
@@ -1356,20 +1415,28 @@ pub mod scfmt {
         }
     }
 
-    pub fn remove_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
-        // determine if file compatible
-        let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
-            Some(x) => *x,
-            None => return Err(ScfmtErr::IncompatibleFileType),
-        };
+    pub fn remove_brackets(
+        str: &str,
+        filetype: &str,
+        indent_type_option: Option<IndentType>,
+    ) -> Result<String, ScfmtErr> {
+        //> determine if file compatible
+            let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
+                Some(x) => *x,
+                None => return Err(ScfmtErr::IncompatibleFileType),
+            };
+        //<
 
-        let mut lines_list: Vec<String> = Vec::new();
+        let (whitespace_char, tab_spaces) = determine_whitespace_type(str, indent_type_option);
 
         //format str before removing brackets, to ensure their information is not lost.
-        let str = &format_str(str, filetype)?;
+        let str = &format_str(
+            str,
+            filetype,
+            indent_pair_to_indent_type(whitespace_char, tab_spaces),
+        )?;
 
-        let (whitespace_char, _tab_spaces) = determine_whitespace_type(str);
-
+        let mut lines_list: Vec<String> = Vec::new();
         let mut formatted_str = String::new();
         let mut processed_line_count = 0;
 
