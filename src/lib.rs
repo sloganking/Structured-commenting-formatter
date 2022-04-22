@@ -395,15 +395,16 @@ pub mod scfmt {
                     diff_with_highest_count = *diff_size;
                 }
             }
-        //<
 
-        if diff_with_highest_count != 0 {
-            num = diff_with_highest_count;
+        //<> determine num and char
+            if diff_with_highest_count != 0 {
+                num = diff_with_highest_count;
 
-            if tab_count > space_count {
-                chr = '\t'
+                if tab_count > space_count {
+                    chr = '\t'
+                }
             }
-        }
+        //<
 
         (chr, num)
     }
