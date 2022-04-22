@@ -1,4 +1,4 @@
-use ::scfmt::scfmt::{IndentType, ScfmtErr};
+use ::scfmt::scfmt::ScfmtErr;
 use colored::Colorize;
 use scfmt::scfmt;
 use std::{env, path::PathBuf};
@@ -57,20 +57,20 @@ fn print_if_err(err_result: Result<(), ScfmtErr>, file: PathBuf) {
     }
 }
 
-fn attempt_transform_path(f: fn(PathBuf, Option<IndentType>) -> Result<(), ScfmtErr>, dir: &str) {
+fn attempt_transform_path(f: fn(PathBuf) -> Result<(), ScfmtErr>, dir: &str) {
     let path = PathBuf::from(dir);
 
     if path.is_dir() {
         match scfmt::get_files_in_dir(dir, "") {
             Ok(paths) => {
                 for file in paths {
-                    print_if_err(f(file.to_path_buf(), None), file.to_path_buf());
+                    print_if_err(f(file.to_path_buf()), file.to_path_buf());
                 }
             }
             Err(err) => println!("{:?}", err),
         }
     } else if path.is_file() {
-        print_if_err(f(path.to_path_buf(), None), path);
+        print_if_err(f(path.to_path_buf()), path);
     } else {
         print_err("Invalid path given. Ensure last argument is a valid file or directory");
     }
