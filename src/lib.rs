@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use crate::scfmt;
     use crate::scfmt::ScfmtErr;
-    use crate::scfmt::{self, IndentType};
     use std::fs;
 
     //> basic tests
@@ -211,14 +211,6 @@ mod tests {
         let answer = fs::read_to_string("./test_resources/11_answer.rs").unwrap();
         assert_eq!(answer, formatted);
     }
-
-    #[test]
-    fn format_str_manual_indentation() {
-        let to_format = fs::read_to_string("./test_resources/1_test.rs").unwrap();
-        let answer = fs::read_to_string("./test_resources/12_answer.rs").unwrap();
-        let formatted = scfmt::format_str(&to_format, "rs", Some(IndentType::Spaces(2))).unwrap();
-        assert_eq!(answer, formatted);
-    }
 }
 
 pub mod scfmt {
@@ -338,7 +330,7 @@ pub mod scfmt {
         Spaces(u8),
     }
 
-    fn process_or_determine_whitespace_type(
+    fn determine_whitespace_type(
         str: &str,
         indent_type_option: Option<IndentType>,
     ) -> (char, usize) {
@@ -349,13 +341,8 @@ pub mod scfmt {
                     IndentType::Spaces(x) => return (' ', x as usize),
                 };
             }
-        //<
 
-        determine_whitespace_type(str)
-    }
-
-    fn determine_whitespace_type(str: &str) -> (char, usize) {
-        //> if no whitespace is found, assume format is 4 spaces
+        //<> if no whitespace is found, assume format is 4 spaces
             let mut chr = ' ';
             let mut num = 4;
         //<
@@ -590,8 +577,7 @@ pub mod scfmt {
             };
         //<
 
-        let (whitespace_char, tab_spaces) =
-            process_or_determine_whitespace_type(str, indent_type_option);
+        let (whitespace_char, tab_spaces) = determine_whitespace_type(str, indent_type_option);
 
         let mut formatted_file = String::from("");
         let mut formatted_lines: Vec<String> = Vec::new();
@@ -1022,8 +1008,7 @@ pub mod scfmt {
             };
         //<
 
-        let (whitespace_char, tab_spaces) =
-            process_or_determine_whitespace_type(str, indent_type_option);
+        let (whitespace_char, tab_spaces) = determine_whitespace_type(str, indent_type_option);
 
         // remove existing brackets, so later part of this function doesn't add more on top of existing ones.
         let str = &remove_brackets(
@@ -1223,8 +1208,7 @@ pub mod scfmt {
             };
         //<
 
-        let (whitespace_char, _tab_spaces) =
-            process_or_determine_whitespace_type(str, indent_type_option);
+        let (whitespace_char, _tab_spaces) = determine_whitespace_type(str, indent_type_option);
 
         let mut lines_list = Vec::new();
         let mut processed_line_count = 0;
@@ -1443,8 +1427,7 @@ pub mod scfmt {
             };
         //<
 
-        let (whitespace_char, tab_spaces) =
-            process_or_determine_whitespace_type(str, indent_type_option);
+        let (whitespace_char, tab_spaces) = determine_whitespace_type(str, indent_type_option);
 
         //format str before removing brackets, to ensure their information is not lost.
         let str = &format_str(
