@@ -409,6 +409,101 @@ pub mod scfmt {
         (chr, num)
     }
 
+    fn determine_whitespace_type_array(str: &str) -> (char, usize) {
+        //> if no whitespace is found, assume format is 4 spaces
+            let mut chr = ' ';
+            let mut num = 4;
+        //<
+
+        let mut tab_count = 0;
+        let mut space_count = 0;
+        // let mut tab_spaces_count_map: HashMap<usize, usize> = HashMap::new();
+
+        // used to count num of same diffs
+        // only count diffs up to u8::max
+        let mut tab_spaces_count_array: [usize; 256] = [0; 256];
+
+        let mut last_depth;
+        let mut last_diff = 0;
+        let mut cur_depth = 0;
+
+        for line in str.lines() {
+            // if line is not empty
+            if let Some(first_char) = line.chars().next() {
+                //> get dif between this line and last line
+                    last_depth = cur_depth;
+                    cur_depth =
+                        if let Some((local_depth, _)) = count_and_remove_begining_whitespace(line) {
+                            local_depth
+                        } else {
+                            0
+                        };
+
+                    let diff = (last_depth as isize - cur_depth as isize).abs() as usize;
+                //<
+
+                match first_char {
+                    ' ' => space_count += 1,
+                    '\t' => tab_count += 1,
+                    _ => {}
+                }
+
+                // store diff
+                if diff != 0 {
+                    // count the current diff
+
+                    tab_spaces_count_array[diff] += 1;
+
+                    // match tab_spaces_count_map.get(&diff) {
+                    //     Some(x) => {
+                    //         let current_map_value = x.clone();
+                    //         tab_spaces_count_map.insert(diff, current_map_value + 1)
+                    //     }
+                    //     None => tab_spaces_count_map.insert(diff, 1),
+                    // };
+
+                    last_diff = diff;
+                } else {
+                    // if there was no change in diff, count the last_diff
+
+                    if last_diff != 0 {
+                        tab_spaces_count_array[last_diff] += 1;
+
+                        // match tab_spaces_count_map.get(&last_diff) {
+                        //     Some(x) => {
+                        //         let current_map_value = x.clone();
+                        //         tab_spaces_count_map.insert(last_diff, current_map_value + 1)
+                        //     }
+                        //     None => tab_spaces_count_map.insert(last_diff, 1),
+                        // };
+                    }
+                }
+            }
+        }
+
+        //> determine most often occuring diff
+            let mut highest_count = 0;
+            let mut diff_with_highest_count = 0;
+            for (diff_size, diff_count) in tab_spaces_count_array.iter().enumerate() {
+                if diff_count > &highest_count {
+                    highest_count = *diff_count;
+                    diff_with_highest_count = diff_size;
+                }
+            }
+
+        //<> determine num and char
+            if diff_with_highest_count != 0 {
+                num = diff_with_highest_count;
+
+                if tab_count > space_count {
+                    chr = '\t'
+                }
+            }
+        //<
+
+        (chr, num)
+    }
+
     fn add_whitespace(line: &str, depth: usize, whitespace_char: char) -> String {
         let mut value = String::from("");
 
