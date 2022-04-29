@@ -211,6 +211,7 @@ mod tests {
     }
 }
 
+/// Contains functions for formatting strucuted comments in files and strings
 pub mod scfmt {
 
     use glob::{glob, GlobError};
