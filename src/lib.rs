@@ -312,6 +312,7 @@ pub mod scfmt {
         "yaml" => "#",
     };
 
+    /// Enum used to represent scfmt errors
     #[derive(PartialEq, Debug)]
     pub enum ScfmtErr {
         IncompatibleFileType,
@@ -435,6 +436,7 @@ pub mod scfmt {
         whitespace + &str_no_whitespace
     }
 
+    /// Returns a list of all files in a directory and it's subdirectories
     pub fn get_files_in_dir(path: &str, filetype: &str) -> Result<Vec<PathBuf>, GlobError> {
         //> get list of all files and dirs in path, using glob
             let mut paths = Vec::new();
@@ -548,6 +550,26 @@ pub mod scfmt {
         )
     }
 
+    /// Ensures lines inside bracketed structured comments are indented
+    ///
+    /// # Arguments
+    ///
+    /// * `str` - A string slice to be formatted
+    /// * `filetype` - A string slice of the file extension representing what language arg `str` is.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scfmt::scfmt::format_str;
+    ///
+    /// let contents = "
+    /// //>
+    /// //this comment and the line below will be indented after formatting
+    /// let a = 0;
+    /// //<";
+    ///
+    /// let formatted = format_str(&contents, "rs").unwrap();
+    /// ```
     pub fn format_str(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
@@ -676,6 +698,7 @@ pub mod scfmt {
         Ok(formatted_file)
     }
 
+    /// Runs ``format_str`` on contents of given file.
     pub fn format_file(file: PathBuf) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
@@ -710,6 +733,7 @@ pub mod scfmt {
         Ok(())
     }
 
+    /// Runs ``add_brackets`` on contents of given file.
     pub fn add_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
@@ -959,6 +983,7 @@ pub mod scfmt {
         true
     }
 
+    /// Adds brackets to bracketless structured comments
     pub fn add_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
@@ -1151,6 +1176,9 @@ pub mod scfmt {
         Ok(final_string)
     }
 
+    /// Adds a '_' character in front of any comment brackets. Nullifying any existing bracketed structured comments, without removing any characters.
+    ///
+    /// This is intended to be run on existing codebases that have not previously been using structured commenting. As brackets may exist in comments that were not intended to be structured comments.
     pub fn null_existing_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
@@ -1236,6 +1264,7 @@ pub mod scfmt {
         count
     }
 
+    /// Runs ``remove_brackets`` on contents of given file
     pub fn remove_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
@@ -1270,6 +1299,7 @@ pub mod scfmt {
         Ok(())
     }
 
+    /// Runs ``null_existing_brackets`` on contents of given file
     pub fn null_existing_brackets_file(file: PathBuf) -> Result<(), ScfmtErr> {
         let extenstion = match file.extension() {
             Some(x) => match x.to_str() {
@@ -1357,6 +1387,9 @@ pub mod scfmt {
         }
     }
 
+    /// Converts bracketed structured comments into bracketless structured comments
+    ///
+    /// Becuase bracketless structured comments rely soley on indentation to show what lines they are talking about, this function formats the input str before removing bracket comments. To ensure structured comment information is not lost.
     pub fn remove_brackets(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
         let comment_starter = match EXTENSION_TO_COMMENT_STARTER_MAP.get(filetype) {
