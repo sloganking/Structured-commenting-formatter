@@ -30,7 +30,6 @@ fn print_if_err(err_result: Result<(), ScfmtErr>, file: PathBuf) {
         };
 
         match err {
-            // ScfmtErr::IncompatibleFileType                  => {print_err(&("Incompatible file type\n".to_owned() + &file_string))},
             ScfmtErr::CommentClosedNothing(line) => print_err(
                 &("comment closed nothing\n".to_owned()
                     + &file_string
@@ -67,7 +66,7 @@ fn attempt_transform_path(f: fn(PathBuf) -> Result<(), ScfmtErr>, dir: &str) {
                     print_if_err(f(file.to_path_buf()), file.to_path_buf());
                 }
             }
-            Err(err) => println!("{:?}", err),
+            Err(err) => println!("{}: {}", "error".red().bold(), err),
         }
     } else if path.is_file() {
         print_if_err(f(path.to_path_buf()), path);
