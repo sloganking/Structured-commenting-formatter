@@ -563,13 +563,19 @@ pub mod scfmt {
     /// ```
     /// use scfmt::scfmt::format_str;
     ///
-    /// let contents = "
+    /// let to_format = "
     /// //>
     /// //this comment and the line below will be indented after formatting
     /// let a = 0;
     /// //<";
+    /// 
+    /// let formatted = "
+    /// //>
+    ///     //this comment and the line below will be indented after formatting
+    ///     let a = 0;
+    /// //<";
     ///
-    /// let formatted = format_str(&contents, "rs").unwrap();
+    /// assert_eq!(formatted, format_str(&to_format, "rs").unwrap());
     /// ```
     pub fn format_str(str: &str, filetype: &str) -> Result<String, ScfmtErr> {
         // determine if file compatible
